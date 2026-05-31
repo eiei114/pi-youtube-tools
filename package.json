@@ -64,7 +64,7 @@
     "@earendil-works/pi-coding-agent": "latest",
     "@earendil-works/pi-tui": "latest",
     "typebox": "latest",
-    "@types/node": "^22.0.0",
+    "@types/node": "^25.9.1",
     "typescript": "^6.0.3"
   }
 }
