@@ -1,24 +1,25 @@
 {
-  "name": "pi-extension-template",
+  "name": "pi-youtube-tools",
   "version": "0.1.0",
-  "description": "Template for building Pi packages with extensions, Agent Skills, prompts, and themes.",
+  "description": "Native Pi extension for YouTube Data API search, video details, and transcripts without an MCP daemon.",
   "type": "module",
   "license": "MIT",
-  "author": "YOUR_NAME",
+  "author": "eiei114",
   "keywords": [
     "pi-package",
     "pi",
+    "youtube",
     "agent-skill",
     "typescript"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OWNER/REPO.git"
+    "url": "git+https://github.com/eiei114/pi-youtube-tools.git"
   },
   "bugs": {
-    "url": "https://github.com/OWNER/REPO/issues"
+    "url": "https://github.com/eiei114/pi-youtube-tools/issues"
   },
-  "homepage": "https://github.com/OWNER/REPO#readme",
+  "homepage": "https://github.com/eiei114/pi-youtube-tools#readme",
   "files": [
     "extensions/",
     "lib/",
