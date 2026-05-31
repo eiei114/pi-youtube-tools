@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Pi documentation
+    url: https://pi.dev/
+    about: Check Pi documentation for package and extension behavior.

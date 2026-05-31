@@ -1,0 +1,70 @@
+{
+  "name": "pi-extension-template",
+  "version": "0.1.0",
+  "description": "Template for building Pi packages with extensions, Agent Skills, prompts, and themes.",
+  "type": "module",
+  "license": "MIT",
+  "author": "YOUR_NAME",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "agent-skill",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OWNER/REPO.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OWNER/REPO/issues"
+  },
+  "homepage": "https://github.com/OWNER/REPO#readme",
+  "files": [
+    "extensions/",
+    "lib/",
+    "skills/",
+    "prompts/",
+    "themes/",
+    "docs/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "ci": "npm run typecheck && npm test && npm run pack:check",
+    "pack:check": "npm pack --dry-run"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ],
+    "skills": [
+      "./skills"
+    ],
+    "prompts": [
+      "./prompts"
+    ],
+    "themes": [
+      "./themes"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "latest",
+    "@earendil-works/pi-coding-agent": "latest",
+    "@earendil-works/pi-tui": "latest",
+    "typebox": "latest",
+    "@types/node": "^22.0.0",
+    "typescript": "^6.0.3"
+  }
+}

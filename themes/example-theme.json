@@ -1,0 +1,7 @@
+{
+  "name": "example-theme",
+  "colors": {
+    "primary": "#8b5cf6",
+    "accent": "#22d3ee"
+  }
+}
