@@ -23,9 +23,6 @@
   "files": [
     "extensions/",
     "lib/",
-    "skills/",
-    "prompts/",
-    "themes/",
     "docs/",
     "README.md",
     "LICENSE",
@@ -40,15 +37,6 @@
   "pi": {
     "extensions": [
       "./extensions"
-    ],
-    "skills": [
-      "./skills"
-    ],
-    "prompts": [
-      "./prompts"
-    ],
-    "themes": [
-      "./themes"
     ]
   },
   "publishConfig": {
@@ -59,6 +47,9 @@
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*",
     "typebox": "*"
+  },
+  "dependencies": {
+    "youtube-transcript-plus": "^1.1.2"
   },
   "devDependencies": {
     "@earendil-works/pi-ai": "latest",

@@ -12,16 +12,18 @@
 
 ## What this is
 
-**pi-youtube-tools** adds YouTube Data API tools directly to Pi via `registerTool()`. Install with `pi install`, set `YOUTUBE_API_KEY`, and search or inspect videos without running a separate MCP server process.
+**pi-youtube-tools** adds YouTube Data API tools directly to Pi via `registerTool()`. Install with `pi install`, run `/youtube:login`, and search or inspect videos without running a separate MCP server process.
 
 Use it when you want `@kirbah/mcp-youtube`-style capabilities inside Pi packages and skills, especially for game research and transcript workflows.
 
 ## Features
 
-- `youtube_search` — search videos by query (planned)
-- `youtube_video_details` — title, channel, stats, description (planned)
-- `youtube_transcript` — fetch captions/transcript text (planned)
+- `youtube_search` — search videos by query
+- `youtube_video_details` — title, channel, stats, optional description
+- `youtube_transcript` — fetch captions/transcript text (hook/outro or full)
+- `/youtube:login` — enter and store API key via Pi UI
 - `/youtube:status` — secret-safe API key configuration check
+- `/youtube:logout` — remove stored API key
 - LLM-friendly formatters with output size guards (planned)
 - Optional bundled skill for gameplay video research (planned)
 
@@ -37,7 +39,13 @@ Or install from GitHub:
 pi install git:github.com/eiei114/pi-youtube-tools
 ```
 
-Set your API key:
+Configure your API key (pick one):
+
+```txt
+/youtube:login
+```
+
+Or set an environment variable:
 
 ```powershell
 $env:YOUTUBE_API_KEY="your_google_api_key"
@@ -54,6 +62,7 @@ pi -e .
 Then run:
 
 ```txt
+/youtube:login
 /youtube:status
 ```
 
@@ -100,7 +109,7 @@ More docs:
 
 Pi packages can execute code with your local permissions. Review extensions before installing third-party packages.
 
-Never commit or log `YOUTUBE_API_KEY`. `/youtube:status` reports configured/missing only.
+Never commit or log `YOUTUBE_API_KEY`. `/youtube:login` stores keys in `~/.pi/agent/pi-youtube-tools-auth.json` (mode 600). `/youtube:status` reports configured/missing only.
 
 For vulnerability reporting, see [`SECURITY.md`](SECURITY.md).
 
