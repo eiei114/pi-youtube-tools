@@ -83,7 +83,7 @@ export async function searchVideos(
     apiKey?: string;
   } = {},
 ): Promise<SearchVideoResult[]> {
-  const maxResults = Math.min(Math.max(options.maxResults ?? 10, 1), 25);
+  const maxResults = Math.min(Math.max(options.maxResults ?? 5, 1), 10);
   const data = (await youtubeGet(
     "/search",
     {

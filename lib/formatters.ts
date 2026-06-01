@@ -1,9 +1,14 @@
 import type { SearchVideoResult, VideoDetails } from "./youtube-api.ts";
 import type { TranscriptResult } from "./transcript.ts";
 
-export const MAX_OUTPUT_CHARS = 45_000;
-export const MAX_DESCRIPTION_CHARS = 500;
-export const MAX_TRANSCRIPT_CHARS = 12_000;
+export const MAX_OUTPUT_CHARS = 12_000;
+export const MAX_DESCRIPTION_CHARS = 300;
+export const MAX_TRANSCRIPT_CHARS = 8_000;
+export const MAX_TRANSCRIPT_SEGMENT_CHARS = 2_000;
+const MAX_SEARCH_TITLE_CHARS = 120;
+const MAX_SEARCH_CHANNEL_CHARS = 80;
+const MAX_SEARCH_SNIPPET_CHARS = 120;
+const TRUNCATION_MARKER_PATTERN = /\n\n\[truncated \d+ chars\]$/;
 
 export function decodeHtmlEntities(text: string): string {
   return text
@@ -21,8 +26,22 @@ function displayText(text: string): string {
   return decodeHtmlEntities(text);
 }
 
+function singleLine(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function truncateInline(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength - 1))}…`;
+}
+
+function compactDisplayText(text: string, maxLength: number): string {
+  return truncateInline(singleLine(displayText(text)), maxLength);
+}
+
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
+  if (TRUNCATION_MARKER_PATTERN.test(text)) return text;
   return `${text.slice(0, maxLength)}\n\n[truncated ${text.length - maxLength} chars]`;
 }
 
@@ -51,13 +70,12 @@ export function formatSearchResults(query: string, results: SearchVideoResult[])
   ];
 
   for (const [index, result] of results.entries()) {
-    lines.push(`${index + 1}. ${displayText(result.title)}`);
+    lines.push(`${index + 1}. ${compactDisplayText(result.title, MAX_SEARCH_TITLE_CHARS)}`);
     lines.push(`   videoId: ${result.videoId}`);
-    lines.push(`   channel: ${displayText(result.channelTitle)} (${result.channelId})`);
+    lines.push(`   channel: ${compactDisplayText(result.channelTitle, MAX_SEARCH_CHANNEL_CHARS)} (${result.channelId})`);
     lines.push(`   published: ${result.publishedAt}`);
     if (result.descriptionSnippet) {
-      const snippet = truncateText(displayText(result.descriptionSnippet), 180);
-      lines.push(`   snippet: ${snippet.replace(/\s+/g, " ")}`);
+      lines.push(`   snippet: ${compactDisplayText(result.descriptionSnippet, MAX_SEARCH_SNIPPET_CHARS)}`);
     }
     lines.push("");
   }
@@ -76,15 +94,15 @@ export function formatVideoDetailsMap(details: Record<string, VideoDetails | nul
       continue;
     }
 
-    lines.push(`title: ${displayText(item.title)}`);
-    lines.push(`channel: ${displayText(item.channelTitle)} (${item.channelId})`);
+    lines.push(`title: ${compactDisplayText(item.title, MAX_SEARCH_TITLE_CHARS)}`);
+    lines.push(`channel: ${compactDisplayText(item.channelTitle, MAX_SEARCH_CHANNEL_CHARS)} (${item.channelId})`);
     lines.push(`published: ${item.publishedAt}`);
     lines.push(`duration: ${item.duration ?? "unknown"}`);
     lines.push(`views: ${item.viewCount.toLocaleString("en-US")}`);
     lines.push(`likes: ${item.likeCount.toLocaleString("en-US")}`);
     lines.push(`comments: ${item.commentCount.toLocaleString("en-US")}`);
     if (item.description) {
-      lines.push(`description: ${item.description}`);
+      lines.push(`description: ${compactDisplayText(item.description, MAX_DESCRIPTION_CHARS)}`);
     }
     lines.push("");
   }
@@ -111,10 +129,10 @@ export function formatTranscriptMap(
     } else {
       lines.push("format: key_segments");
       lines.push("hook:");
-      lines.push(truncateText(displayText(transcript.hook ?? ""), 4_000));
+      lines.push(truncateText(displayText(transcript.hook ?? ""), MAX_TRANSCRIPT_SEGMENT_CHARS));
       lines.push("");
       lines.push("outro:");
-      lines.push(truncateText(displayText(transcript.outro ?? ""), 4_000));
+      lines.push(truncateText(displayText(transcript.outro ?? ""), MAX_TRANSCRIPT_SEGMENT_CHARS));
     }
     lines.push("");
   }
@@ -125,4 +143,63 @@ export function formatTranscriptMap(
 export function formatToolError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+export function compactSearchResultDetails(results: SearchVideoResult[]): SearchVideoResult[] {
+  return results.map((result) => ({
+    ...result,
+    title: compactDisplayText(result.title, MAX_SEARCH_TITLE_CHARS),
+    channelTitle: compactDisplayText(result.channelTitle, MAX_SEARCH_CHANNEL_CHARS),
+    descriptionSnippet: result.descriptionSnippet
+      ? compactDisplayText(result.descriptionSnippet, MAX_SEARCH_SNIPPET_CHARS)
+      : null,
+  }));
+}
+
+export function compactVideoDetailsMap(
+  details: Record<string, VideoDetails | null>,
+): Record<string, VideoDetails | null> {
+  return Object.fromEntries(
+    Object.entries(details).map(([videoId, item]) => {
+      if (!item) return [videoId, null];
+      return [
+        videoId,
+        {
+          ...item,
+          title: compactDisplayText(item.title, MAX_SEARCH_TITLE_CHARS),
+          channelTitle: compactDisplayText(item.channelTitle, MAX_SEARCH_CHANNEL_CHARS),
+          description: item.description
+            ? compactDisplayText(item.description, MAX_DESCRIPTION_CHARS)
+            : undefined,
+        },
+      ];
+    }),
+  );
+}
+
+export function compactTranscriptDetails(
+  transcripts: Record<string, TranscriptResult | null>,
+): Record<string, TranscriptResult | null> {
+  return Object.fromEntries(
+    Object.entries(transcripts).map(([videoId, transcript]) => {
+      if (!transcript) return [videoId, null];
+      if (transcript.format === "full_text") {
+        return [
+          videoId,
+          {
+            ...transcript,
+            text: truncateText(displayText(transcript.text ?? ""), MAX_TRANSCRIPT_CHARS),
+          },
+        ];
+      }
+      return [
+        videoId,
+        {
+          ...transcript,
+          hook: truncateText(displayText(transcript.hook ?? ""), MAX_TRANSCRIPT_SEGMENT_CHARS),
+          outro: truncateText(displayText(transcript.outro ?? ""), MAX_TRANSCRIPT_SEGMENT_CHARS),
+        },
+      ];
+    }),
+  );
 }

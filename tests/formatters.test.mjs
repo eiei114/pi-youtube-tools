@@ -48,6 +48,39 @@ test("formatSearchResults decodes HTML entities in titles", () => {
   assert.match(text, /Bacon&Roblox/);
 });
 
+test("formatSearchResults keeps snippets compact and single-line", () => {
+  const text = formatters.formatSearchResults("roblox", [
+    {
+      videoId: "abc12345678",
+      title: "A".repeat(200),
+      channelId: "chan123",
+      channelTitle: "Creator",
+      publishedAt: "2026-01-01T00:00:00Z",
+      descriptionSnippet: `first line\n${"B".repeat(300)}`,
+    },
+  ]);
+
+  const snippetLine = text.split("\n").find((line) => line.includes("snippet:"));
+  assert.ok(snippetLine);
+  assert.ok(snippetLine.length < 150);
+  assert.doesNotMatch(snippetLine, /\[truncated/);
+});
+
+test("compactTranscriptDetails caps raw full-text details", () => {
+  const compact = formatters.compactTranscriptDetails({
+    abc12345678: {
+      format: "full_text",
+      text: "A".repeat(formatters.MAX_TRANSCRIPT_CHARS + 50),
+    },
+  });
+
+  assert.match(compact.abc12345678.text, /\[truncated 50 chars\]/);
+
+  const formatted = formatters.formatTranscriptMap(compact);
+  assert.equal(formatted.match(/\[truncated 50 chars\]/g)?.length, 1);
+  assert.doesNotMatch(formatted, /\[truncated \d+ chars\][\s\S]*\[truncated \d+ chars\]/);
+});
+
 test("formatTranscriptMap decodes HTML entities in transcript text", () => {
   const text = formatters.formatTranscriptMap({
     test1234567: {
