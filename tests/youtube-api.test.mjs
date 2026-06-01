@@ -38,7 +38,7 @@ test("searchVideos throws MissingApiKeyError without env", async () => {
   }
 });
 
-test("searchVideos maps API response", async () => {
+test("searchVideos maps API response and defaults to five results", async () => {
   let requestedMaxResults = "";
   const fetchFn = async (url) => {
     assert.match(String(url), /youtube\/v3\/search/);
@@ -65,7 +65,6 @@ test("searchVideos maps API response", async () => {
   const results = await searchVideos("roblox", {
     apiKey: "test-key",
     fetchFn,
-    maxResults: 5,
   });
 
   assert.equal(results.length, 1);

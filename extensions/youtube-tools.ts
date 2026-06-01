@@ -181,7 +181,7 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
         );
         const transcripts = Object.fromEntries(entries);
         const compactTranscripts = compactTranscriptDetails(transcripts);
-        const text = formatTranscriptMap(compactTranscripts);
+        const text = formatTranscriptMap(transcripts);
         return toolText(text, { count: uniqueIds.length, transcripts: compactTranscripts });
       } catch (error) {
         return toolError(error);

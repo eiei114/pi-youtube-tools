@@ -8,6 +8,7 @@ export const MAX_TRANSCRIPT_SEGMENT_CHARS = 2_000;
 const MAX_SEARCH_TITLE_CHARS = 120;
 const MAX_SEARCH_CHANNEL_CHARS = 80;
 const MAX_SEARCH_SNIPPET_CHARS = 120;
+const TRUNCATION_MARKER_PATTERN = /\n\n\[truncated \d+ chars\]$/;
 
 export function decodeHtmlEntities(text: string): string {
   return text
@@ -40,6 +41,7 @@ function compactDisplayText(text: string, maxLength: number): string {
 
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
+  if (TRUNCATION_MARKER_PATTERN.test(text)) return text;
   return `${text.slice(0, maxLength)}\n\n[truncated ${text.length - maxLength} chars]`;
 }
 

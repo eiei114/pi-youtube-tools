@@ -75,6 +75,10 @@ test("compactTranscriptDetails caps raw full-text details", () => {
   });
 
   assert.match(compact.abc12345678.text, /\[truncated 50 chars\]/);
+
+  const formatted = formatters.formatTranscriptMap(compact);
+  assert.equal(formatted.match(/\[truncated 50 chars\]/g)?.length, 1);
+  assert.doesNotMatch(formatted, /\[truncated \d+ chars\][\s\S]*\[truncated \d+ chars\]/);
 });
 
 test("formatTranscriptMap decodes HTML entities in transcript text", () => {
