@@ -39,8 +39,10 @@ test("searchVideos throws MissingApiKeyError without env", async () => {
 });
 
 test("searchVideos maps API response", async () => {
+  let requestedMaxResults = "";
   const fetchFn = async (url) => {
     assert.match(String(url), /youtube\/v3\/search/);
+    requestedMaxResults = new URL(String(url)).searchParams.get("maxResults");
     return new Response(
       JSON.stringify({
         items: [
@@ -69,6 +71,26 @@ test("searchVideos maps API response", async () => {
   assert.equal(results.length, 1);
   assert.equal(results[0]?.videoId, "abc12345678");
   assert.equal(results[0]?.title, "Gameplay");
+  assert.equal(requestedMaxResults, "5");
+});
+
+test("searchVideos caps maxResults to a lean upper bound", async () => {
+  let requestedMaxResults = "";
+  const fetchFn = async (url) => {
+    requestedMaxResults = new URL(String(url)).searchParams.get("maxResults");
+    return new Response(JSON.stringify({ items: [] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  };
+
+  await searchVideos("roblox", {
+    apiKey: "test-key",
+    fetchFn,
+    maxResults: 25,
+  });
+
+  assert.equal(requestedMaxResults, "10");
 });
 
 test("getVideoDetails returns null for missing videos", async () => {

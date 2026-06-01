@@ -10,6 +10,9 @@ import {
   formatTranscriptMap,
   formatVideoDetailsMap,
   formatDescription,
+  compactSearchResultDetails,
+  compactTranscriptDetails,
+  compactVideoDetailsMap,
 } from "../lib/formatters.ts";
 
 function toolText(text: string, details: Record<string, unknown> = {}) {
@@ -32,11 +35,12 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
       "Use youtube_search when you need to discover YouTube videos by topic, game name, or keyword.",
       "Prefer youtube_search over web search for structured YouTube video discovery.",
       "Follow with youtube_video_details or youtube_transcript once you have a videoId.",
+      "Keep maxResults small (default 5) unless the user explicitly needs a broader scan.",
     ],
     parameters: Type.Object({
       query: Type.String({ description: "Search query, e.g. 'Roblox Hunty Zombie gameplay'." }),
       maxResults: Type.Optional(
-        Type.Number({ default: 10, description: "Maximum results to return (1-25, default 10)." }),
+        Type.Number({ default: 5, description: "Maximum results to return (1-10, default 5)." }),
       ),
       order: Type.Optional(
         StringEnum(["relevance", "date", "viewCount"], {
@@ -51,8 +55,9 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
           maxResults: params.maxResults,
           order: params.order,
         });
+        const compactResults = compactSearchResultDetails(results);
         const text = formatSearchResults(params.query, results);
-        return toolText(text, { query: params.query, count: results.length, results });
+        return toolText(text, { query: params.query, count: results.length, results: compactResults });
       } catch (error) {
         return toolError(error);
       }
@@ -111,9 +116,10 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
             ];
           }),
         );
+        const compactDetails = compactVideoDetailsMap(details);
 
-        const text = formatVideoDetailsMap(details);
-        return toolText(text, { count: ids.length, details });
+        const text = formatVideoDetailsMap(compactDetails);
+        return toolText(text, { count: ids.length, details: compactDetails });
       } catch (error) {
         return toolError(error);
       }
@@ -128,7 +134,7 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
     promptSnippet: "Fetch YouTube transcript segments for a video",
     promptGuidelines: [
       "Use youtube_transcript when you need spoken content from a specific YouTube video.",
-      "Default format key_segments returns hook/outro only; use full_text when the entire transcript is required.",
+      "Default format key_segments returns hook/outro only; use full_text only when needed because transcript text is capped for safety.",
       "Transcript availability depends on captions; unavailable videos return transcript unavailable.",
     ],
     parameters: Type.Object({
@@ -147,7 +153,7 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
       format: Type.Optional(
         StringEnum(["key_segments", "full_text"], {
           default: "key_segments",
-          description: "key_segments returns hook/outro; full_text returns the entire transcript.",
+          description: "key_segments returns hook/outro; full_text returns capped transcript text.",
         }),
       ),
     }),
@@ -174,8 +180,9 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
           uniqueIds.map(async (id) => [id, await getTranscript(id, { lang, format })] as const),
         );
         const transcripts = Object.fromEntries(entries);
-        const text = formatTranscriptMap(transcripts);
-        return toolText(text, { count: uniqueIds.length, transcripts });
+        const compactTranscripts = compactTranscriptDetails(transcripts);
+        const text = formatTranscriptMap(compactTranscripts);
+        return toolText(text, { count: uniqueIds.length, transcripts: compactTranscripts });
       } catch (error) {
         return toolError(error);
       }
