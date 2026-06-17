@@ -12,20 +12,25 @@
 
 ## What this is
 
-**pi-youtube-tools** adds YouTube Data API tools directly to Pi via `registerTool()`. Install with `pi install`, run `/youtube:login`, and search or inspect videos without running a separate MCP server process.
+**pi-youtube-tools** is a native Pi extension that registers three YouTube tools via `registerTool()`. Install with `pi install`, configure an API key, and search or inspect videos without running a separate MCP server process.
 
-Use it when you want `@kirbah/mcp-youtube`-style capabilities inside Pi packages and skills, especially for game research and transcript workflows.
+This package targets the same workflows as external YouTube MCP servers, but ships as a Pi package: tools load in-process, auth stays local, and output is formatted for agent context limits.
 
-## Features
+## Tools
 
-- `youtube_search` — search videos by query
-- `youtube_video_details` — title, channel, stats, optional description
-- `youtube_transcript` — fetch captions/transcript text (hook/outro or full)
-- `/youtube:login` — enter and store API key via Pi UI
-- `/youtube:status` — secret-safe API key configuration check
-- `/youtube:logout` — remove stored API key
-- LLM-friendly formatters with output size guards (planned)
-- Optional bundled skill for gameplay video research (planned)
+| Tool | Purpose |
+|---|---|
+| `youtube_search` | Search videos by query (default 5 results, max 10) |
+| `youtube_video_details` | Title, channel, stats, optional truncated description |
+| `youtube_transcript` | Fetch captions as hook/outro segments or capped full text |
+
+### Slash commands
+
+| Command | Purpose |
+|---|---|
+| `/youtube:login` | Enter and store a YouTube Data API key via Pi UI |
+| `/youtube:status` | Secret-safe check of whether an API key is configured |
+| `/youtube:logout` | Remove the stored API key (does not unset `YOUTUBE_API_KEY`) |
 
 ## Install
 
@@ -39,42 +44,74 @@ Or install from GitHub:
 pi install git:github.com/eiei114/pi-youtube-tools
 ```
 
-Configure your API key (pick one):
+## API key setup
+
+You need a [YouTube Data API v3](https://developers.google.com/youtube/v3) key.
+
+**Auth precedence** (first match wins):
+
+1. `YOUTUBE_API_KEY` environment variable
+2. Key stored by `/youtube:login` in `~/.pi/agent/pi-youtube-tools-auth.json` (mode 600)
+
+Configure with either method:
 
 ```txt
 /youtube:login
 ```
 
-Or set an environment variable:
-
 ```powershell
 $env:YOUTUBE_API_KEY="your_google_api_key"
 ```
 
-## Quick start
+Check configuration:
 
-Try this package locally:
+```txt
+/youtube:status
+```
+
+`/youtube:status` reports configured or missing only — it never prints the key. `/youtube:logout` clears the stored file; an environment variable still takes precedence on the next run.
+
+## Typical workflow
+
+1. **Discover** — `youtube_search` with a topic or game name.
+2. **Inspect** — `youtube_video_details` for one or more `videoId` values from search results.
+3. **Read captions** — `youtube_transcript` when spoken content matters.
+
+`youtube_transcript` defaults to `key_segments` (intro hook + outro) to save tokens. Use `format: full_text` only when you need more of the transcript.
+
+See [`docs/examples.md`](docs/examples.md) for copy-paste examples.
+
+## Output guards
+
+Tool responses are formatted for LLM context and Pi clipboard/TUI limits:
+
+- Overall tool text is capped at **12,000** characters.
+- Search results default to **5** items (max **10**); titles, channels, and snippets are compacted.
+- Descriptions are truncated to **300** characters when `includeDescription` is true.
+- Transcripts use **8,000** characters for full text or **2,000** per hook/outro segment.
+
+Truncated sections end with a `[truncated N chars]` marker.
+
+## Quick start (local)
 
 ```bash
 pi -e .
 ```
-
-Then run:
 
 ```txt
 /youtube:login
 /youtube:status
 ```
 
-## Package contents
+Then ask Pi to search YouTube, fetch video details, or read a transcript.
+
+## Package layout
 
 | Path | Purpose |
 |---|---|
-| `extensions/` | Pi TypeScript extension entrypoints |
-| `lib/` | YouTube API client, config, formatters |
-| `skills/` | Agent Skills (gameplay research, etc.) |
-| `prompts/` | Prompt templates |
-| `docs/` | Setup and release docs |
+| `extensions/` | Pi extension entrypoints and tool registration |
+| `lib/` | YouTube API client, auth, formatters, transcript helpers |
+| `docs/` | Setup, examples, and release docs |
 
 ## Development
 
@@ -85,7 +122,7 @@ npm run ci
 
 ## Release
 
-This package is set up for npm Trusted Publishing, so no `NPM_TOKEN` is required.
+This package uses npm Trusted Publishing (no `NPM_TOKEN` required).
 
 ```bash
 npm version patch
@@ -94,22 +131,11 @@ git push --follow-tags
 
 See [`docs/release.md`](docs/release.md) for setup details.
 
-## Template checklist
-
-After creating a repository from this template, follow [`docs/template-checklist.md`](docs/template-checklist.md).
-
-More docs:
-
-- [`docs/typescript.md`](docs/typescript.md)
-- [`docs/examples.md`](docs/examples.md)
-- [`docs/github-template.md`](docs/github-template.md)
-- [`docs/repository-settings.md`](docs/repository-settings.md)
-
 ## Security
 
 Pi packages can execute code with your local permissions. Review extensions before installing third-party packages.
 
-Never commit or log `YOUTUBE_API_KEY`. `/youtube:login` stores keys in `~/.pi/agent/pi-youtube-tools-auth.json` (mode 600). `/youtube:status` reports configured/missing only.
+Never commit or log `YOUTUBE_API_KEY`. `/youtube:login` stores keys locally and the extension UI handles the secret without sending it to the model.
 
 For vulnerability reporting, see [`SECURITY.md`](SECURITY.md).
 
@@ -118,7 +144,6 @@ For vulnerability reporting, see [`SECURITY.md`](SECURITY.md).
 - npm: https://www.npmjs.com/package/pi-youtube-tools
 - GitHub: https://github.com/eiei114/pi-youtube-tools
 - Issues: https://github.com/eiei114/pi-youtube-tools/issues
-- Vault docs: `4_Project/pi-youtube-tools/` in obsidian-note
 
 ## License
 

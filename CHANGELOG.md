@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## [0.1.2] - 2026-06-18
+
+### Changed
+
+- Rewrote README and public examples to match the shipped 3-tool native Pi extension.
+- Documented API key precedence, slash commands, output guards, and the search → details → transcript workflow.
+- Removed stale template and "planned" wording from user-facing docs.
+
 ## [0.1.1] - 2026-06-01
 
 ### Fixed
