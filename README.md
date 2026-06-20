@@ -126,10 +126,12 @@ This package uses npm Trusted Publishing (no `NPM_TOKEN` required).
 
 ```bash
 npm version patch
-git push --follow-tags
+git push
 ```
 
-See [`docs/release.md`](docs/release.md) for setup details.
+After merge to `main`, `auto-release.yml` creates the semver tag and GitHub release, then dispatches `publish.yml` for npm publication.
+
+See [`docs/release.md`](docs/release.md) for setup details and how to verify the tag → publish handoff.
 
 ## Security
 
