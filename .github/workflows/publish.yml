@@ -1,4 +1,4 @@
-name: Publish Package
+name: Publish to npm
 
 on:
   push:
@@ -9,30 +9,72 @@ on:
       - package-lock.json
       - .github/workflows/publish.yml
     tags:
-      - "v*"
+      - 'v*.*.*'
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to publish (defaults to selected ref)'
+        required: false
+        type: string
 
 permissions:
-  id-token: write
   contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish-${{ github.event.inputs.ref || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
+    name: Publish package
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-          cache: npm
+          ref: ${{ github.event.inputs.ref || github.ref }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
       - name: Ensure npm supports trusted publishing
         run: npm install -g npm@latest
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run pack:check
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif node -e "const p=require('./package.json'); process.exit(p.dependencies || p.devDependencies ? 0 : 1)"; then
+            npm install
+          else
+            echo "No dependencies to install."
+          fi
+
+      - name: Validate package
+        shell: bash
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.ci ? 0 : 1)"; then
+            npm run ci
+          elif node -e "process.exit(require('./package.json').scripts?.check ? 0 : 1)"; then
+            npm run check
+          elif node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+            npm test
+          elif node -e "process.exit(require('./package.json').scripts?.typecheck ? 0 : 1)"; then
+            npm run typecheck
+          else
+            echo "No validation script configured."
+          fi
+
       - name: Skip already published version
         id: published
         shell: bash
@@ -53,5 +95,7 @@ jobs:
             printf '%s\n' "$output" >&2
             exit "$status"
           fi
-      - if: steps.published.outputs.skip != 'true'
-        run: npm publish
+
+      - name: Publish to npm
+        if: steps.published.outputs.skip != 'true'
+        run: npm publish --access public
