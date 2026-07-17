@@ -2,11 +2,15 @@
 
 ## Unreleased
 
-- Add Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
-
 All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
+
+## [0.1.3] - 2026-07-04
+
+### Changed
+
+- Add Buy Me a Coffee sponsor button to README and native GitHub funding link via `.github/FUNDING.yml`.
 
 ## [0.1.2] - 2026-06-18
 
@@ -28,7 +32,7 @@ This project follows semantic versioning.
 - `youtube_search` now defaults to 5 results and caps requested results at 10.
 - Transcript and description formatting now use stricter truncation limits.
 
-## [0.1.0] - YYYY-MM-DD
+## [0.1.0] - 2026-06-01
 
 ### Added
 
