@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [0.1.4] - 2026-07-20
+
+### Changed
+
+- Bump package version to `0.1.4` for the next patch release.
+
 All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
@@ -39,4 +45,3 @@ This project follows semantic versioning.
 - Initial Pi package template.
 - Example extension, Agent Skill, prompt, and theme.
 - CI and npm Trusted Publishing workflow.
-
