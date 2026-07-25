@@ -10,6 +10,7 @@ import {
   formatTranscriptMap,
   formatVideoDetailsMap,
   formatDescription,
+  MAX_DESCRIPTION_CHARS,
   compactSearchResultDetails,
   compactTranscriptDetails,
   compactVideoDetailsMap,
@@ -87,7 +88,7 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
       includeDescription: Type.Optional(
         Type.Boolean({
           default: false,
-          description: "Include truncated description text (up to 500 chars per video).",
+          description: `Include truncated description text (up to ${MAX_DESCRIPTION_CHARS} chars per video).`,
         }),
       ),
     }),
