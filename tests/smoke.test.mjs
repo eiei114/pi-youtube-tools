@@ -28,3 +28,25 @@ test("CHANGELOG documents the current package version", () => {
 test("CHANGELOG has no placeholder release dates", () => {
   assert.doesNotMatch(changelog, /YYYY-MM-DD/, "CHANGELOG.md must not contain placeholder release dates");
 });
+
+const youtubeToolsSource = await readFile(new URL("../extensions/youtube-tools.ts", import.meta.url), "utf8");
+const { MAX_DESCRIPTION_CHARS } = await import("../lib/formatters.ts");
+
+test("youtube_video_details schema documents the description truncation cap", () => {
+  assert.match(
+    youtubeToolsSource,
+    /MAX_DESCRIPTION_CHARS/,
+    "Extension must import MAX_DESCRIPTION_CHARS for schema text",
+  );
+  assert.match(
+    youtubeToolsSource,
+    /up to \$\{MAX_DESCRIPTION_CHARS\} chars per video/,
+    "Parameter description must reference MAX_DESCRIPTION_CHARS to avoid stale limits",
+  );
+  assert.doesNotMatch(
+    youtubeToolsSource,
+    /up to 500 chars/,
+    "Stale 500-char limit must not remain in schema text",
+  );
+  assert.equal(MAX_DESCRIPTION_CHARS, 300, "README and docs document a 300-char description cap");
+});
