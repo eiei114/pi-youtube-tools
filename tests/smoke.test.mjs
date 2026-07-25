@@ -33,20 +33,28 @@ const youtubeToolsSource = await readFile(new URL("../extensions/youtube-tools.t
 const { MAX_DESCRIPTION_CHARS } = await import("../lib/formatters.ts");
 
 test("youtube_video_details schema documents the description truncation cap", () => {
-  assert.match(
-    youtubeToolsSource,
-    /MAX_DESCRIPTION_CHARS/,
-    "Extension must import MAX_DESCRIPTION_CHARS for schema text",
+  const includeDescriptionSchema = youtubeToolsSource.match(
+    /includeDescription:\s*Type\.Optional\(\s*Type\.Boolean\(\{[\s\S]*?\}\),\s*\)/,
+  )?.[0];
+
+  assert.ok(
+    includeDescriptionSchema,
+    "youtube_video_details must register an includeDescription parameter",
   );
   assert.match(
-    youtubeToolsSource,
+    includeDescriptionSchema,
+    /MAX_DESCRIPTION_CHARS/,
+    "includeDescription description must reference MAX_DESCRIPTION_CHARS",
+  );
+  assert.match(
+    includeDescriptionSchema,
     /up to \$\{MAX_DESCRIPTION_CHARS\} chars per video/,
-    "Parameter description must reference MAX_DESCRIPTION_CHARS to avoid stale limits",
+    "includeDescription description must use MAX_DESCRIPTION_CHARS template to avoid stale limits",
   );
   assert.doesNotMatch(
-    youtubeToolsSource,
+    includeDescriptionSchema,
     /up to 500 chars/,
-    "Stale 500-char limit must not remain in schema text",
+    "includeDescription description must not retain the stale 500-char limit",
   );
-  assert.equal(MAX_DESCRIPTION_CHARS, 300, "README and docs document a 300-char description cap");
+  assert.equal(MAX_DESCRIPTION_CHARS, 300, "MAX_DESCRIPTION_CHARS export must be 300");
 });
