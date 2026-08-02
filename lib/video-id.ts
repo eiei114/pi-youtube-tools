@@ -1,3 +1,5 @@
+import { InvalidVideoInputError } from "./errors.ts";
+
 const VIDEO_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 
 const URL_PATTERNS = [
@@ -19,7 +21,7 @@ export function extractVideoId(input: string): string | undefined {
 export function requireVideoId(input: string): string {
   const videoId = extractVideoId(input);
   if (!videoId) {
-    throw new Error(`Could not parse YouTube video ID from: ${input}`);
+    throw new InvalidVideoInputError(input);
   }
   return videoId;
 }
