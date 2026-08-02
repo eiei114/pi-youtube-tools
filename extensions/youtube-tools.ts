@@ -3,7 +3,7 @@ import { Type } from "typebox";
 import { StringEnum } from "../lib/schema.ts";
 import { searchVideos, getVideoDetails } from "../lib/youtube-api.ts";
 import { getTranscript, type TranscriptFormat } from "../lib/transcript.ts";
-import { extractVideoId, resolveVideoIds } from "../lib/video-id.ts";
+import { requireVideoId, resolveVideoIds } from "../lib/video-id.ts";
 import {
   formatSearchResults,
   formatToolError,
@@ -168,11 +168,7 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
           return toolText("Provide videoId or videoIds.", { error: "missing_input" });
         }
 
-        const ids = inputs.map((input) => {
-          const id = extractVideoId(input);
-          if (!id) throw new Error(`Could not parse YouTube video ID from: ${input}`);
-          return id;
-        });
+        const ids = inputs.map((input) => requireVideoId(input));
         const uniqueIds = [...new Set(ids)];
         const format = (params.format ?? "key_segments") as TranscriptFormat;
         const lang = params.lang ?? "en";
