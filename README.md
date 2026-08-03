@@ -1,5 +1,7 @@
 # Pi YouTube Tools
 
+[![Join dotfield.xyz on Discord](https://img.shields.io/badge/Join%20dotfield.xyz%20on%20Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/4945dXZVW5)
+
 [![CI](https://github.com/eiei114/pi-youtube-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/eiei114/pi-youtube-tools/actions/workflows/ci.yml)
 [![Publish](https://github.com/eiei114/pi-youtube-tools/actions/workflows/publish.yml/badge.svg)](https://github.com/eiei114/pi-youtube-tools/actions/workflows/publish.yml)
 [![npm version](https://img.shields.io/npm/v/pi-youtube-tools.svg)](https://www.npmjs.com/package/pi-youtube-tools)
