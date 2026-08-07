@@ -19,6 +19,33 @@ test("extractVideoId parses youtu.be URL", () => {
   assert.equal(extractVideoId("https://youtu.be/dQw4w9WgXcQ"), "dQw4w9WgXcQ");
 });
 
+test("extractVideoId parses youtube.com/live URL", () => {
+  assert.equal(
+    extractVideoId("https://www.youtube.com/live/dQw4w9WgXcQ?feature=share"),
+    "dQw4w9WgXcQ",
+  );
+});
+
+test("extractVideoId parses mobile and music watch URLs", () => {
+  assert.equal(
+    extractVideoId("https://m.youtube.com/watch?v=dQw4w9WgXcQ"),
+    "dQw4w9WgXcQ",
+  );
+  assert.equal(
+    extractVideoId("https://music.youtube.com/watch?v=dQw4w9WgXcQ"),
+    "dQw4w9WgXcQ",
+  );
+});
+
+test("extractVideoId returns undefined for non-YouTube URLs", () => {
+  assert.equal(extractVideoId("https://example.com/watch?v=dQw4w9WgXcQ"), undefined);
+});
+
+test("extractVideoId rejects look-alike hosts containing youtube.com", () => {
+  assert.equal(extractVideoId("https://notyoutube.com/live/dQw4w9WgXcQ"), undefined);
+  assert.equal(extractVideoId("https://notyoutu.be/dQw4w9WgXcQ"), undefined);
+});
+
 test("requireVideoId throws InvalidVideoInputError on invalid input", () => {
   assert.throws(() => requireVideoId("bad"), InvalidVideoInputError);
   assert.throws(

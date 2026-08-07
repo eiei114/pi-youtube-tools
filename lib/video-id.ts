@@ -3,7 +3,7 @@ import { InvalidVideoInputError } from "./errors.ts";
 const VIDEO_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 
 const URL_PATTERNS = [
-  /(?:youtube\.com\/watch\?(?:[^&]*&)*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+  /(?:(?<=[/.])youtube\.com\/watch\?(?:[^&]*&)*v=|(?<=[/.])youtu\.be\/|(?<=[/.])youtube\.com\/embed\/|(?<=[/.])youtube\.com\/v\/|(?<=[/.])youtube\.com\/shorts\/|(?<=[/.])youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
 ];
 
 export function extractVideoId(input: string): string | undefined {
