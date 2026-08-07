@@ -41,6 +41,11 @@ test("extractVideoId returns undefined for non-YouTube URLs", () => {
   assert.equal(extractVideoId("https://example.com/watch?v=dQw4w9WgXcQ"), undefined);
 });
 
+test("extractVideoId rejects look-alike hosts containing youtube.com", () => {
+  assert.equal(extractVideoId("https://notyoutube.com/live/dQw4w9WgXcQ"), undefined);
+  assert.equal(extractVideoId("https://notyoutu.be/dQw4w9WgXcQ"), undefined);
+});
+
 test("requireVideoId throws InvalidVideoInputError on invalid input", () => {
   assert.throws(() => requireVideoId("bad"), InvalidVideoInputError);
   assert.throws(
