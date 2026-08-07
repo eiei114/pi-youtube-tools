@@ -1,41 +1,39 @@
 version: 2
-updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+
+# Keep routine version updates for all ecosystems in one weekly PR.
+# Security updates remain outside this version-update group.
+multi-ecosystem-groups:
+  all-dependencies:
     schedule:
-      interval: "weekly"
-      day: "tuesday"
+      interval: weekly
+      day: tuesday
       time: "02:00"
-      timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 2
+      timezone: Asia/Tokyo
     labels:
-      - "dependencies"
-      - "dependabot"
-      - "maintenance"
-    groups:
-      npm-dev-minor-patch:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
-      npm-prod-patch:
-        dependency-type: "production"
-        update-types:
-          - "patch"
+      - dependencies
+      - dependabot
+      - maintenance
+    commit-message:
+      prefix: chore(deps)
+      include: scope
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
+    open-pull-requests-limit: 1
     cooldown:
       semver-major-days: 30
       semver-minor-days: 7
       semver-patch-days: 2
 
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: github-actions
     directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "tuesday"
-      time: "02:30"
-      timezone: "Asia/Tokyo"
+    patterns:
+      - "*"
+    multi-ecosystem-group: all-dependencies
     open-pull-requests-limit: 1
     labels:
-      - "dependencies"
-      - "dependabot"
-      - "maintenance"
+      - ci
