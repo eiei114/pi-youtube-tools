@@ -10,6 +10,24 @@ const MAX_SEARCH_CHANNEL_CHARS = 80;
 const MAX_SEARCH_SNIPPET_CHARS = 120;
 const TRUNCATION_MARKER_PATTERN = /\n\n\[truncated \d+ chars\]$/;
 
+export function formatIso8601Duration(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i.exec(value.trim());
+  if (!match) return undefined;
+
+  const hours = Number(match[1] ?? 0);
+  const minutes = Number(match[2] ?? 0);
+  const seconds = Number(match[3] ?? 0);
+
+  if (hours > 0) {
+    const parts = [`${hours}h`];
+    if (minutes > 0) parts.push(`${minutes}m`);
+    return parts.join(" ");
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 export function decodeHtmlEntities(text: string): string {
   return text
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
@@ -97,7 +115,8 @@ export function formatVideoDetailsMap(details: Record<string, VideoDetails | nul
     lines.push(`title: ${compactDisplayText(item.title, MAX_SEARCH_TITLE_CHARS)}`);
     lines.push(`channel: ${compactDisplayText(item.channelTitle, MAX_SEARCH_CHANNEL_CHARS)} (${item.channelId})`);
     lines.push(`published: ${item.publishedAt}`);
-    lines.push(`duration: ${item.duration ?? "unknown"}`);
+    const duration = formatIso8601Duration(item.duration) ?? "unknown";
+    lines.push(`duration: ${duration}`);
     lines.push(`views: ${item.viewCount.toLocaleString("en-US")}`);
     lines.push(`likes: ${item.likeCount.toLocaleString("en-US")}`);
     lines.push(`comments: ${item.commentCount.toLocaleString("en-US")}`);
@@ -168,6 +187,7 @@ export function compactVideoDetailsMap(
           ...item,
           title: compactDisplayText(item.title, MAX_SEARCH_TITLE_CHARS),
           channelTitle: compactDisplayText(item.channelTitle, MAX_SEARCH_CHANNEL_CHARS),
+          duration: formatIso8601Duration(item.duration) ?? item.duration,
           description: item.description
             ? compactDisplayText(item.description, MAX_DESCRIPTION_CHARS)
             : undefined,

@@ -21,6 +21,35 @@ test("formatSearchResults renders lean markdown output", () => {
   assert.match(text, /Roblox Gameplay/);
 });
 
+test("formatIso8601Duration renders human-readable durations", () => {
+  assert.equal(formatters.formatIso8601Duration("PT0S"), "0:00");
+  assert.equal(formatters.formatIso8601Duration("PT45S"), "0:45");
+  assert.equal(formatters.formatIso8601Duration("PT10M"), "10:00");
+  assert.equal(formatters.formatIso8601Duration("PT10M30S"), "10:30");
+  assert.equal(formatters.formatIso8601Duration("PT1H2M3S"), "1h 2m");
+  assert.equal(formatters.formatIso8601Duration(null), undefined);
+  assert.equal(formatters.formatIso8601Duration("not-a-duration"), undefined);
+});
+
+test("formatVideoDetailsMap renders formatted durations", () => {
+  const text = formatters.formatVideoDetailsMap({
+    abc12345678: {
+      id: "abc12345678",
+      title: "Title",
+      channelId: "chan1",
+      channelTitle: "Creator",
+      publishedAt: "2026-01-01T00:00:00Z",
+      duration: "PT10M30S",
+      viewCount: 1000,
+      likeCount: 50,
+      commentCount: 5,
+    },
+  });
+
+  assert.match(text, /duration: 10:30/);
+  assert.doesNotMatch(text, /PT10M30S/);
+});
+
 test("truncateText appends truncation marker", () => {
   const text = formatters.truncateText("abcdefghij", 5);
   assert.match(text, /\[truncated 5 chars\]/);
