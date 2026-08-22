@@ -13,7 +13,7 @@ const TRUNCATION_MARKER_PATTERN = /\n\n\[truncated \d+ chars\]$/;
 export function formatIso8601Duration(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   const match = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/i.exec(value.trim());
-  if (!match) return undefined;
+  if (!match || (!match[1] && !match[2] && !match[3])) return undefined;
 
   const hours = Number(match[1] ?? 0);
   const minutes = Number(match[2] ?? 0);
@@ -59,7 +59,17 @@ function compactDisplayText(text: string, maxLength: number): string {
 
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
-  if (TRUNCATION_MARKER_PATTERN.test(text)) return text;
+  const markerMatch = text.match(TRUNCATION_MARKER_PATTERN);
+  if (markerMatch) {
+    const marker = markerMatch[0];
+    const content = text.slice(0, -marker.length);
+    const truncatedCount = Number(/\[truncated (\d+) chars\]$/.exec(marker)?.[1]);
+    const expected = `${content.slice(0, maxLength)}\n\n[truncated ${truncatedCount} chars]`;
+    if (content.length === maxLength && text === expected && Number.isFinite(truncatedCount)) {
+      return text;
+    }
+    return `${content.slice(0, maxLength)}\n\n[truncated ${content.length - maxLength} chars]`;
+  }
   return `${text.slice(0, maxLength)}\n\n[truncated ${text.length - maxLength} chars]`;
 }
 
@@ -187,7 +197,7 @@ export function compactVideoDetailsMap(
           ...item,
           title: compactDisplayText(item.title, MAX_SEARCH_TITLE_CHARS),
           channelTitle: compactDisplayText(item.channelTitle, MAX_SEARCH_CHANNEL_CHARS),
-          duration: formatIso8601Duration(item.duration) ?? item.duration,
+          duration: formatIso8601Duration(item.duration) ?? "unknown",
           description: item.description
             ? compactDisplayText(item.description, MAX_DESCRIPTION_CHARS)
             : undefined,

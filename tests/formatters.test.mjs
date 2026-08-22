@@ -27,6 +27,7 @@ test("formatIso8601Duration renders human-readable durations", () => {
   assert.equal(formatters.formatIso8601Duration("PT10M"), "10:00");
   assert.equal(formatters.formatIso8601Duration("PT10M30S"), "10:30");
   assert.equal(formatters.formatIso8601Duration("PT1H2M3S"), "1h 2m");
+  assert.equal(formatters.formatIso8601Duration("PT"), undefined);
   assert.equal(formatters.formatIso8601Duration(null), undefined);
   assert.equal(formatters.formatIso8601Duration("not-a-duration"), undefined);
 });
@@ -53,6 +54,48 @@ test("formatVideoDetailsMap renders formatted durations", () => {
 test("truncateText appends truncation marker", () => {
   const text = formatters.truncateText("abcdefghij", 5);
   assert.match(text, /\[truncated 5 chars\]/);
+});
+
+test("truncateText ignores fake truncation markers on oversized input", () => {
+  const oversized = `${"A".repeat(20)}\n\n[truncated 999 chars]`;
+  const truncated = formatters.truncateText(oversized, 10);
+  assert.equal(truncated, "AAAAAAAAAA\n\n[truncated 10 chars]");
+});
+
+test("truncateText preserves already-truncated output", () => {
+  const original = "A".repeat(20);
+  const truncated = formatters.truncateText(original, 10);
+  assert.equal(formatters.truncateText(truncated, 10), truncated);
+});
+
+test("compactVideoDetailsMap uses unknown duration fallback", () => {
+  const compact = formatters.compactVideoDetailsMap({
+    missingDuration: {
+      id: "missingDuration",
+      title: "Title",
+      channelId: "chan1",
+      channelTitle: "Creator",
+      publishedAt: "2026-01-01T00:00:00Z",
+      duration: null,
+      viewCount: 1,
+      likeCount: 1,
+      commentCount: 1,
+    },
+    malformedDuration: {
+      id: "malformedDuration",
+      title: "Title",
+      channelId: "chan1",
+      channelTitle: "Creator",
+      publishedAt: "2026-01-01T00:00:00Z",
+      duration: "PT",
+      viewCount: 1,
+      likeCount: 1,
+      commentCount: 1,
+    },
+  });
+
+  assert.equal(compact.missingDuration?.duration, "unknown");
+  assert.equal(compact.malformedDuration?.duration, "unknown");
 });
 
 test("decodeHtmlEntities decodes common YouTube API entities", () => {
