@@ -6,6 +6,12 @@ This project follows semantic versioning.
 
 ## Unreleased
 
+## [0.1.6] - 2026-08-22
+
+### Changed
+
+- Merge the 2026-08-22 managed OSS dependency and maintenance PR batch.
+
 ## [0.1.5] - 2026-08-04
 
 ### Changed
