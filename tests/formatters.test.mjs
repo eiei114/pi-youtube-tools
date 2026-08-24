@@ -167,6 +167,36 @@ test("formatTranscriptMap decodes HTML entities in transcript text", () => {
   assert.doesNotMatch(text, /&#39;/);
 });
 
+test("formatTranscriptMap renders unavailable diagnostics in mixed transcript output", () => {
+  const text = formatters.formatTranscriptMap(
+    {
+      success1234: {
+        format: "key_segments",
+        hook: "intro",
+        outro: "outro",
+      },
+      missing1234: null,
+    },
+    {
+      missing1234: {
+        reasonCode: "language_unavailable",
+        lang: "ja",
+        message: "Transcript language \"ja\" is unavailable. Available languages include en.",
+        nextAction: "Retry with an available caption language.",
+        availableLangs: ["en"],
+      },
+    },
+  );
+
+  assert.match(text, /## success1234/);
+  assert.match(text, /format: key_segments/);
+  assert.match(text, /## missing1234/);
+  assert.match(text, /transcript unavailable/);
+  assert.match(text, /lang: ja/);
+  assert.match(text, /reason: language_unavailable/);
+  assert.match(text, /next action: Retry with an available caption language\./);
+});
+
 test("extractHook keeps only early segments", () => {
   const segments = [
     { offset: 0, duration: 1, text: "intro" },

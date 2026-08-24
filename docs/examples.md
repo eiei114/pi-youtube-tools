@@ -52,6 +52,8 @@ Get the hook and outro transcript for https://www.youtube.com/watch?v=dQw4w9WgXc
 - `lang` — caption language code, default `en`
 - `format` — `key_segments` (default) or `full_text`
 
+If a transcript is unavailable, the tool still returns `details.transcripts[videoId]` as `null`. Check `details.transcriptDiagnostics[videoId]` for the attempted language, reason code, short message, and next action (for example: retry later, try another `lang`, or choose another video).
+
 ## Local development
 
 Load the package from a checkout:

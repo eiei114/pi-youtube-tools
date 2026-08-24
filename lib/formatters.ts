@@ -1,5 +1,5 @@
 import type { SearchVideoResult, VideoDetails } from "./youtube-api.ts";
-import type { TranscriptResult } from "./transcript.ts";
+import type { TranscriptDiagnostic, TranscriptResult } from "./transcript.ts";
 
 export const MAX_OUTPUT_CHARS = 12_000;
 export const MAX_DESCRIPTION_CHARS = 300;
@@ -141,13 +141,23 @@ export function formatVideoDetailsMap(details: Record<string, VideoDetails | nul
 
 export function formatTranscriptMap(
   transcripts: Record<string, TranscriptResult | null>,
+  diagnostics: Record<string, TranscriptDiagnostic> = {},
 ): string {
   const lines = ["YOUTUBE TRANSCRIPTS", ""];
 
   for (const [videoId, transcript] of Object.entries(transcripts)) {
     lines.push(`## ${videoId}`);
     if (!transcript) {
+      const diagnostic = diagnostics[videoId];
       lines.push("transcript unavailable");
+      if (diagnostic) {
+        lines.push(`lang: ${diagnostic.lang}`);
+        lines.push(`reason: ${diagnostic.reasonCode} — ${diagnostic.message}`);
+        lines.push(`next action: ${diagnostic.nextAction}`);
+        if (diagnostic.rawErrorExcerpt) {
+          lines.push(`raw error: ${compactDisplayText(diagnostic.rawErrorExcerpt, 240)}`);
+        }
+      }
       lines.push("");
       continue;
     }
