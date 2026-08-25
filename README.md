@@ -80,7 +80,7 @@ Check configuration:
 2. **Inspect** — `youtube_video_details` for one or more `videoId` values from search results.
 3. **Read captions** — `youtube_transcript` when spoken content matters.
 
-`youtube_transcript` defaults to `key_segments` (intro hook + outro) to save tokens. Use `format: full_text` only when you need more of the transcript.
+`youtube_transcript` defaults to `key_segments` (intro hook + outro) to save tokens. Use `format: full_text` only when you need more of the transcript. When captions are unavailable, `details.transcripts[videoId]` stays `null` and `details.transcriptDiagnostics[videoId]` explains the attempted `lang`, a conservative reason code, and whether to retry, switch language, or choose another video.
 
 See [`docs/examples.md`](docs/examples.md) for copy-paste examples.
 
