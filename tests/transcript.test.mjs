@@ -91,6 +91,18 @@ test("getTranscriptWithDiagnostics classifies upstream/network errors conservati
   assert.equal(result.diagnostic.rawErrorExcerpt, undefined);
 });
 
+test("getTranscriptWithDiagnostics rejects invalid lang values", async () => {
+  const result = await transcript.getTranscriptWithDiagnostics("abc12345678", {
+    lang: "ja\n- injected",
+    fetcher: async (_videoId, options) => {
+      assert.deepEqual(options, { lang: "en" });
+      return [segment("hello")];
+    },
+  });
+
+  assert.equal(result.transcript?.format, "key_segments");
+});
+
 test("getTranscriptWithDiagnostics sanitizes unknown dependency errors", async () => {
   const result = await transcript.getTranscriptWithDiagnostics("abc12345678", {
     lang: "en",

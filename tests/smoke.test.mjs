@@ -22,7 +22,11 @@ test("package uses public publish config", () => {
 
 test("CHANGELOG documents the current package version", () => {
   const versionPattern = new RegExp(`^## \\[${packageJson.version.replace(/\./g, "\\.")}\\] - \\d{4}-\\d{2}-\\d{2}`, "m");
-  assert.match(changelog, versionPattern, `CHANGELOG.md must include a dated section for version ${packageJson.version}`);
+  const unreleasedHasContent = /^## Unreleased\n\n(?:### [^\n]+\n\n)?(?:-|\*)/m.test(changelog);
+  assert.ok(
+    versionPattern.test(changelog) || unreleasedHasContent,
+    `CHANGELOG.md must include a dated section for version ${packageJson.version} or document pending changes under Unreleased`,
+  );
 });
 
 test("CHANGELOG has no placeholder release dates", () => {

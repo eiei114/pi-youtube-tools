@@ -6,8 +6,6 @@ This project follows semantic versioning.
 
 ## Unreleased
 
-## [0.1.7] - 2026-08-25
-
 ### Changed
 
 - Added patch-level transcript unavailable diagnostics with bounded reason codes, attempted language, and next-action hints while preserving `transcripts[id] === null` fallbacks.

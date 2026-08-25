@@ -63,6 +63,7 @@ const DEFAULT_LANG = "en";
 const MAX_RAW_ERROR_EXCERPT_CHARS = 240;
 const MAX_AVAILABLE_LANGS = 8;
 const MAX_LANG_CHARS = 30;
+const LANG_TAG_PATTERN = /^[A-Za-z0-9-]{1,30}$/;
 const TRANSCRIPT_ERROR_NAMES = {
   disabled: "YoutubeTranscriptDisabledError",
   invalidVideoId: "YoutubeTranscriptInvalidVideoIdError",
@@ -123,6 +124,15 @@ function errorName(error: unknown): string | undefined {
 
 function isErrorNamed(error: unknown, expectedName: string): boolean {
   return errorName(error) === expectedName;
+}
+
+function resolveLang(lang: string | undefined): string {
+  if (typeof lang !== "string") return DEFAULT_LANG;
+  const sanitized = sanitizeOneLine(lang, MAX_LANG_CHARS);
+  if (!sanitized || !LANG_TAG_PATTERN.test(sanitized)) {
+    return DEFAULT_LANG;
+  }
+  return sanitized;
 }
 
 function sanitizeOneLine(value: string, maxLength: number): string {
@@ -257,7 +267,7 @@ export async function getTranscriptWithDiagnostics(
   videoId: string,
   options: TranscriptOptions = {},
 ): Promise<TranscriptWithDiagnosticsResult> {
-  const lang = options.lang ?? DEFAULT_LANG;
+  const lang = resolveLang(options.lang);
   const format = options.format ?? "key_segments";
   const transcriptFetcher: TranscriptFetcher = options.fetcher ?? fetchTranscript;
 
