@@ -20,6 +20,10 @@ test("package uses public publish config", () => {
   assert.equal(packageJson.publishConfig.access, "public");
 });
 
+test("package declares a Node.js runtime floor aligned with CI", () => {
+  assert.equal(packageJson.engines?.node, ">=20");
+});
+
 test("CHANGELOG documents the current package version", () => {
   const versionPattern = new RegExp(`^## \\[${packageJson.version.replace(/\./g, "\\.")}\\] - \\d{4}-\\d{2}-\\d{2}`, "m");
   assert.match(changelog, versionPattern, `CHANGELOG.md must include a dated section for version ${packageJson.version}`);

@@ -3,6 +3,9 @@
   "version": "0.1.7",
   "description": "Native Pi extension for YouTube Data API search, video details, and transcripts without an MCP daemon.",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "license": "MIT",
   "author": "eiei114",
   "keywords": [
