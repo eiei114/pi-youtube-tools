@@ -62,7 +62,22 @@ test("/youtube:status reports stored API key without exposing its value", async 
 
     const message = notifications.at(-1)?.text ?? "";
     assert.match(message, /configured via pi-youtube-tools login/);
+    assert.match(message, /\(source: stored\)/);
     assert.equal(message.includes(storedSecret), false);
+  });
+});
+
+test("/youtube:status reports source none when no API key exists", async () => {
+  await withExtension(async (commands) => {
+    const status = commands.get("youtube:status");
+    assert.ok(status);
+
+    const { ctx, notifications } = createCtx("");
+    await status.handler("", ctx);
+
+    const message = notifications.at(-1)?.text ?? "";
+    assert.match(message, /YouTube API key missing/);
+    assert.match(message, /\(source: none\)/);
   });
 });
 
@@ -81,6 +96,7 @@ test("YOUTUBE_API_KEY takes priority and status still hides secrets", async () =
 
     const message = notifications.at(-1)?.text ?? "";
     assert.match(message, /YOUTUBE_API_KEY environment variable/);
+    assert.match(message, /\(source: environment\)/);
     assert.equal(message.includes(envSecret), false);
     assert.equal(message.includes(storedSecret), false);
   });
