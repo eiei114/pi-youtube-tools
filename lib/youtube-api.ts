@@ -2,6 +2,7 @@ import { getYoutubeApiKey } from "./config.ts";
 import { MissingApiKeyError, YoutubeApiError } from "./errors.ts";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 
 export interface SearchVideoResult {
   videoId: string;
@@ -28,6 +29,7 @@ export interface VideoDetails {
 export interface YoutubeApiOptions {
   fetchFn?: typeof fetch;
   apiKey?: string;
+  requestTimeoutMs?: number;
 }
 
 export type SearchOrder = "relevance" | "date" | "viewCount";
@@ -58,10 +60,27 @@ async function youtubeGet(
   }
   url.searchParams.set("key", apiKey);
 
-  const res = await fetchFn(url.toString());
-  const data = (await res.json()) as {
+  const requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const signal = AbortSignal.timeout(requestTimeoutMs);
+  let res: Response;
+  let data: {
     error?: { message?: string; errors?: Array<{ reason?: string }> };
   };
+
+  try {
+    res = await fetchFn(url.toString(), { signal });
+    data = (await res.json()) as {
+      error?: { message?: string; errors?: Array<{ reason?: string }> };
+    };
+  } catch (error) {
+    if (
+      signal.aborted ||
+      (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
+    ) {
+      throw new YoutubeApiError(`YouTube API request timed out after ${requestTimeoutMs}ms`);
+    }
+    throw error;
+  }
 
   if (!res.ok) {
     const message = data.error?.message ?? `YouTube API request failed (HTTP ${res.status})`;
@@ -81,6 +100,7 @@ export async function searchVideos(
     order?: SearchOrder;
     fetchFn?: typeof fetch;
     apiKey?: string;
+    requestTimeoutMs?: number;
   } = {},
 ): Promise<SearchVideoResult[]> {
   const maxResults = Math.min(Math.max(options.maxResults ?? 5, 1), 10);
@@ -93,7 +113,11 @@ export async function searchVideos(
       type: "video",
       order: options.order ?? "relevance",
     },
-    { fetchFn: options.fetchFn, apiKey: options.apiKey },
+    {
+      fetchFn: options.fetchFn,
+      apiKey: options.apiKey,
+      requestTimeoutMs: options.requestTimeoutMs,
+    },
   )) as {
     items?: Array<{
       id?: { videoId?: string };
@@ -125,6 +149,7 @@ export async function getVideoDetails(
     includeDescription?: boolean;
     fetchFn?: typeof fetch;
     apiKey?: string;
+    requestTimeoutMs?: number;
   } = {},
 ): Promise<Record<string, VideoDetails | null>> {
   const uniqueIds = [...new Set(videoIds.filter(Boolean))];
@@ -136,7 +161,11 @@ export async function getVideoDetails(
       part: "snippet,statistics,contentDetails",
       id: uniqueIds.join(","),
     },
-    { fetchFn: options.fetchFn, apiKey: options.apiKey },
+    {
+      fetchFn: options.fetchFn,
+      apiKey: options.apiKey,
+      requestTimeoutMs: options.requestTimeoutMs,
+    },
   )) as {
     items?: Array<{
       id?: string;
