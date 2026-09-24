@@ -76,7 +76,15 @@ test("searchVideos maps API response and defaults to five results", async () => 
 test("searchVideos translates a stalled fetch into a timeout error", async () => {
   const fetchFn = (_url, { signal }) =>
     new Promise((_, reject) => {
-      signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+      const keepAlive = setTimeout(() => {}, 1000);
+      signal.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(keepAlive);
+          reject(signal.reason);
+        },
+        { once: true },
+      );
     });
 
   await assert.rejects(
