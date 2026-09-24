@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 const { searchVideos, getVideoDetails, parseYouTubeNumber } = await import("../lib/youtube-api.ts");
-const { MissingApiKeyError } = await import("../lib/errors.ts");
+const { MissingApiKeyError, YoutubeApiError } = await import("../lib/errors.ts");
 
 test("parseYouTubeNumber handles empty and invalid values", () => {
   assert.equal(parseYouTubeNumber(undefined), 0);
@@ -71,6 +71,28 @@ test("searchVideos maps API response and defaults to five results", async () => 
   assert.equal(results[0]?.videoId, "abc12345678");
   assert.equal(results[0]?.title, "Gameplay");
   assert.equal(requestedMaxResults, "5");
+});
+
+test("searchVideos translates a stalled fetch into a timeout error", async () => {
+  const fetchFn = (_url, { signal }) =>
+    new Promise((_, reject) => {
+      signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+    });
+
+  await assert.rejects(
+    () =>
+      searchVideos("roblox", {
+        apiKey: "test-key",
+        fetchFn,
+        requestTimeoutMs: 20,
+      }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(error.message, "YouTube API request timed out after 20ms");
+      assert.doesNotMatch(error.message, /test-key/);
+      return true;
+    },
+  );
 });
 
 test("searchVideos caps maxResults to a lean upper bound", async () => {
