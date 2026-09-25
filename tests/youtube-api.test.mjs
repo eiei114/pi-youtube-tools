@@ -103,6 +103,19 @@ test("searchVideos translates a stalled fetch into a timeout error", async () =>
   );
 });
 
+test("searchVideos preserves unrelated AbortError rejections", async () => {
+  const fetchFn = async () => {
+    const error = new Error("caller cancelled request");
+    error.name = "AbortError";
+    throw error;
+  };
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => error?.name === "AbortError" && error?.message === "caller cancelled request",
+  );
+});
+
 test("searchVideos caps maxResults to a lean upper bound", async () => {
   let requestedMaxResults = "";
   const fetchFn = async (url) => {

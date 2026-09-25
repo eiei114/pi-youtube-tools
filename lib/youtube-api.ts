@@ -73,10 +73,7 @@ async function youtubeGet(
       error?: { message?: string; errors?: Array<{ reason?: string }> };
     };
   } catch (error) {
-    if (
-      signal.aborted ||
-      (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-    ) {
+    if (signal.aborted) {
       throw new YoutubeApiError(`YouTube API request timed out after ${requestTimeoutMs}ms`);
     }
     throw error;
