@@ -19,6 +19,20 @@ test("extractVideoId parses youtu.be URL", () => {
   assert.equal(extractVideoId("https://youtu.be/dQw4w9WgXcQ"), "dQw4w9WgXcQ");
 });
 
+test("extractVideoId covers canonical, short, and timestamped YouTube URLs", () => {
+  const cases = [
+    ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "dQw4w9WgXcQ"],
+    ["https://youtu.be/dQw4w9WgXcQ", "dQw4w9WgXcQ"],
+    ["https://www.youtube.com/shorts/dQw4w9WgXcQ", "dQw4w9WgXcQ"],
+    ["https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s", "dQw4w9WgXcQ"],
+    ["https://www.youtube.com/short/dQw4w9WgXcQ", undefined],
+  ];
+
+  for (const [input, expected] of cases) {
+    assert.equal(extractVideoId(input), expected, input);
+  }
+});
+
 test("extractVideoId parses youtube.com/live URL", () => {
   assert.equal(
     extractVideoId("https://www.youtube.com/live/dQw4w9WgXcQ?feature=share"),
