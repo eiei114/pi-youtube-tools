@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.13] - 2026-09-30
+
+### Changed
+
+- Update `@earendil-works/pi-*` dependencies to `0.99.1`.
+
 ## [0.1.12] - 2026-09-27
 
 - chore: periodic patch bump after 7+ days without npm publish
