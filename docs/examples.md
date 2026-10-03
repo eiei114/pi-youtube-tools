@@ -90,10 +90,11 @@ Search YouTube for "TypeScript generics tutorial", pick the top three results, c
 
    ## abc12345678
    title: TypeScript Generics Explained
-   channel: Dev Channel
+   channel: Dev Channel (UCxxxxxxxxxxx)
+   published: 2025-06-01T12:00:00Z
    duration: 12:34
-   views: 125000
-   likes: 4200
+   views: 125,000
+   likes: 4,200
    comments: 180
    ```
 
@@ -121,7 +122,7 @@ Search YouTube for "TypeScript generics tutorial", pick the top three results, c
    Thanks for watching — links in the description…
    ```
 
-If a video has no captions, `details.transcripts[videoId]` is `null` and `details.transcriptDiagnostics[videoId]` explains why (for example `lang_not_available`) and what to try next.
+If a video has no captions, `details.transcripts[videoId]` is `null` and `details.transcriptDiagnostics[videoId]` explains why (for example `language_unavailable`) and what to try next.
 
 ## Tool parameters (reference)
 
