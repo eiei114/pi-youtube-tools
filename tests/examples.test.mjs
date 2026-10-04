@@ -10,7 +10,11 @@ test("docs/examples.md documents the compare-three-videos walkthrough", () => {
   assert.match(examples, /youtube_search.*youtube_video_details.*youtube_transcript/s);
   assert.match(examples, /"videoIds": \["abc12345678", "def98765432", "ghi11223344"\]/);
   assert.match(examples, /"format": "key_segments"/);
+  assert.match(examples, /channel: Dev Channel \(UCxxxxxxxxxxx\)/);
+  assert.match(examples, /published: 2025-06-01T12:00:00Z/);
+  assert.match(examples, /views: 125,000/);
   assert.match(examples, /YOUTUBE TRANSCRIPTS/);
+  assert.match(examples, /`language_unavailable`/);
 });
 
 test("docs/examples.md documents /youtube:status source labels", () => {
