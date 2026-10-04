@@ -122,7 +122,7 @@ Search YouTube for "TypeScript generics tutorial", pick the top three results, c
    Thanks for watching — links in the description…
    ```
 
-If a video has no captions, `details.transcripts[videoId]` is `null` and `details.transcriptDiagnostics[videoId]` explains why (for example `language_unavailable`) and what to try next.
+If a transcript is unavailable for the requested language, `details.transcripts[videoId]` is `null` and `details.transcriptDiagnostics[videoId]` explains why (for example `language_unavailable`) and what to try next.
 
 ## Tool parameters (reference)
 
