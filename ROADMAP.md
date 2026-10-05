@@ -10,8 +10,9 @@ This file is maintainer-facing context. It is **not** shipped in the npm tarball
 planner a bounded list of next micro-tasks without re-discovering project state
 each run.
 
-Status snapshot: **2026-W36**. Update this file whenever a release ships or a
-seed is completed.
+Status snapshot: **2026-W41**. Updated after the 0.1.13 release and the
+completion of the timeout, transcript dependency, auth-source, and examples
+maintenance seeds.
 
 ---
 
@@ -20,12 +21,12 @@ seed is completed.
 | Item | Value |
 |---|---|
 | npm package | [`pi-youtube-tools`](https://www.npmjs.com/package/pi-youtube-tools) |
-| Latest version | **0.1.7** (published 2026-08-25) |
-| Git tag | [`v0.1.7`](https://github.com/eiei114/pi-youtube-tools/releases/tag/v0.1.7) |
+| Latest version | **0.1.13** (published 2026-09-30) |
+| Git tag | [`v0.1.13`](https://github.com/eiei114/pi-youtube-tools/releases/tag/v0.1.13) |
 | Tools | `youtube_search`, `youtube_video_details`, `youtube_transcript` |
 | Commands | `/youtube:login`, `/youtube:status`, `/youtube:logout` |
 | Auth | `YOUTUBE_API_KEY` env var → stored key (`~/.pi/agent/pi-youtube-tools-auth.json`, mode 600) |
-| Transcript dep | `youtube-transcript-plus` ^1.1.2 (installed 1.2.0) |
+| Transcript dep | `youtube-transcript-plus` ^2.0.1 (installed 2.0.1) |
 | Node runtime | `engines.node` **>= 20** (declared in 0.1.x) |
 | CI | Node 22, `npm run ci` = typecheck + `node --test` + `npm pack --dry-run` |
 | Publishing | npm Trusted Publishing (OIDC), `auto-release.yml` → `publish.yml`, no `NPM_TOKEN` |
@@ -33,6 +34,8 @@ seed is completed.
 
 ### Recent releases
 
+- **0.1.13** (2026-09-30) — Pi SDK dependency update to 0.99.1.
+- **0.1.8–0.1.12** (2026-09-27) — periodic patch bumps after the npm publish interval guard.
 - **0.1.7** (2026-08-25) — transcript unavailable diagnostics with bounded reason codes, attempted language, and next-action hints.
 - **0.1.6** (2026-08-22) — managed OSS dependency and maintenance PR batch.
 - **0.1.5** (2026-08-04) — patch bump for Discord release webhook verification.
@@ -54,22 +57,20 @@ seed is completed.
 
 ## Short-term goals (next 1–2 releases)
 
-- **0.1.x patch** — close remaining docs and observability gaps that need no
-  behavior change for users: troubleshooting guide, API-key source in status,
-  formatter snapshot tests. Ship as one patch release if bundled.
-- **0.2.0 minor** — resilience: request timeouts/AbortController on every
-  outbound fetch, and adoption of `youtube-transcript-plus` v2 (retry with
-  exponential backoff). Minor bump because transcript behavior may shift and
-  the dependency floor is already Node >= 20.
-- **Ongoing** — keep Dependabot PRs unblocked each week; the only open major
-  bump is **PR #48** (`youtube-transcript-plus` 2.0.1).
+- **0.1.x patch** — close the remaining documentation and formatter-test gaps:
+  troubleshooting coverage and boundary assertions for output truncation.
+- **0.2.0 follow-up** — resilience groundwork is now shipped: API request
+  timeouts and `youtube-transcript-plus` v2.0.1 retry support are present. Keep
+  validating edge cases before planning any behavior-changing minor release.
+- **Ongoing** — keep Dependabot PRs and the release workflow unblocked each
+  week; no known dependency migration is currently waiting in this roadmap.
 
 ---
 
 ## Known technical debt
 
 Concrete items found while refreshing this roadmap. Each is small and verifiable.
-Items marked **done** were shipped between 2026-W29 and 2026-W36.
+Items marked **done** were shipped between 2026-W29 and 2026-W41.
 
 | ID | Area | Debt | Risk | Status |
 |---|---|---|---|---|
@@ -77,28 +78,28 @@ Items marked **done** were shipped between 2026-W29 and 2026-W36.
 | TD-2 | errors | `InvalidVideoInputError` unused / plain `Error` thrown | Inconsistent error typing | **done** |
 | TD-3 | video-id | Missing `live/`, `m.`, `music.` URL shapes | Live/mobile links fail to parse | **done** |
 | TD-4 | formatting | Raw ISO 8601 durations in tool output | Output shows `PT10M30S` | **done** (0.1.x) |
-| TD-5 | resilience | `youtube-api.ts` and `lib/transcript.ts` have no request timeout / AbortController | Hung upstream stalls the tool | open |
+| TD-5 | resilience | `youtube-api.ts` and `lib/transcript.ts` have no request timeout / AbortController | Hung upstream stalls the tool | **done** (0.1.x) |
 | TD-6 | tests | No `tests/transcript.test.mjs` | Hook/outro regressions land silently | **done** |
 | TD-7 | metadata | No `engines.node` in `package.json` | Runtime floor undocumented | **done** (0.1.x) |
-| TD-8 | deps | `youtube-transcript-plus` 1.x → 2.x (Dependabot **PR #48**) | Misses upstream retry/backoff | open |
+| TD-8 | deps | `youtube-transcript-plus` 1.x → 2.x (Dependabot **PR #48**) | Misses upstream retry/backoff | **done** (0.1.x) |
 | TD-9 | docs | No `docs/troubleshooting.md` for 403/quota/caption failures | Users and agents lack failure playbooks | open |
-| TD-10 | observability | `/youtube:status` does not report key `source` (`environment` vs `stored`) | Debugging auth precedence is guesswork | open |
+| TD-10 | observability | `/youtube:status` does not report key `source` (`environment` vs `stored`) | Debugging auth precedence is guesswork | **done** (0.1.x) |
 | TD-11 | tests | No formatter snapshot tests for truncation markers | Output-shape regressions hard to spot | open |
-| TD-12 | docs | No end-to-end "compare three videos" example in `docs/examples.md` | Onboarding gap for multi-tool workflows | open |
+| TD-12 | docs | No end-to-end "compare three videos" example in `docs/examples.md` | Onboarding gap for multi-tool workflows | **done** (0.1.x) |
 
-### Open dependency PRs (as of 2026-W36)
+### Open dependency work (as of 2026-W41)
 
-- **#48** `youtube-transcript-plus` 1.2.0 → **2.0.1** (major). Needs validation + minor bump to 0.2.0.
+No dependency migration is currently tracked as open. The former Dependabot
+**PR #48** migration to `youtube-transcript-plus` **2.0.1** is complete.
 
 ---
 
 ## Improvement areas
 
-- **Resilience** — timeouts + retry on both API and transcript paths (blocks 0.2.0).
-- **Docs** — `docs/troubleshooting.md`; a short "add a new tool" section in `CONTRIBUTING.md`.
-- **Examples** — one end-to-end example combining all three tools in `docs/examples.md`.
+- **Resilience** — keep timeout and transcript retry behavior covered as upstream dependencies evolve.
+- **Docs** — add `docs/troubleshooting.md`; consider a short "add a new tool" section in `CONTRIBUTING.md`.
 - **Tests** — formatter snapshot tests so truncation markers stay stable.
-- **Observability** — surface API key `source` in `/youtube:status` without exposing the secret.
+- **Maintenance** — keep Dependabot, release guards, and the roadmap synchronized.
 
 ---
 
@@ -112,9 +113,9 @@ a backlog issue. Seeds are independent unless noted.
 > a PR, and the acceptance bullets below are satisfied. No seed here requires a
 > production action or a manual npm publish — those stay human-owned.
 
-### S-11 · Add request timeouts (AbortController) to `youtube-api.ts`  *(code+tests, ~60–90 min)*
+### S-11 · Add request timeouts (AbortController) to `youtube-api.ts`  *(code+tests, ~60–90 min, **done**)*
 
-**Fixes:** TD-5 (API side)
+**Fixes:** TD-5 (API side) — **done** in the 2026-W39 maintenance batch.
 
 **Why:** A stalled YouTube Data API response currently hangs the tool indefinitely. Agents waiting on a tool call have no feedback and may retry, wasting quota.
 
@@ -123,26 +124,26 @@ a backlog issue. Seeds are independent unless noted.
 - Add a test that an artificially stalled `fetchFn` rejects with the timeout error.
 
 **Acceptance:**
-- [ ] A stalled fetch fails fast with a readable timeout error instead of hanging.
-- [ ] Existing API tests still pass; `npm run ci` green.
+- [x] A stalled fetch fails fast with a readable timeout error instead of hanging.
+- [x] Existing API tests still pass; `npm run ci` green.
 
 ---
 
-### S-12 · Bump `youtube-transcript-plus` to v2.0.1 and adopt resilience  *(deps+code+tests, ~60–90 min)*
+### S-12 · Bump `youtube-transcript-plus` to v2.0.1 and adopt resilience  *(deps+code+tests, ~60–90 min, **done**)*
 
-**Fixes:** TD-5 (transcript side), TD-8. **Depends on:** PR #48.
+**Fixes:** TD-5 (transcript side), TD-8. **Depends on:** PR #48 — **done** in the 2026-W37 maintenance batch.
 
-**Why:** v2 adds retry with exponential backoff and AbortController support. Staying on 1.x means transcript fetches miss upstream reliability fixes and blocks the 0.2.0 resilience release theme.
+**Why:** v2 adds retry with exponential backoff and AbortController support. The dependency is now adopted; keep the retry and timeout behavior covered as the integration evolves.
 
 - Rebase/merge Dependabot **#48**, then validate `lib/transcript.ts` against the v2 API.
 - Adopt v2 retry/backoff and pass through a timeout consistent with **S-11**.
 - Evaluate the optional `videoDetails` option (decide whether to surface it or keep tool boundaries clean).
-- Bump `pi-youtube-tools` **minor** (0.1.7 → 0.2.0), update `CHANGELOG.md`, note the Node >= 20 requirement.
+- Validate the v2 integration, keep the Node >= 20 requirement documented, and update release notes when a behavior-changing minor release is planned.
 
 **Acceptance:**
-- [ ] `youtube-transcript-plus@2.x` in `package-lock.json`; `npm run ci` green.
-- [ ] Transcript fetches retry on transient errors and time out cleanly.
-- [ ] Version bump is minor, `CHANGELOG.md` updated, `version:check` passes.
+- [x] `youtube-transcript-plus@2.x` in `package-lock.json`; `npm run ci` green.
+- [x] Transcript fetches retry on transient errors and time out cleanly.
+- [x] Node >= 20 remains documented; release/version bookkeeping is current.
 
 ---
 
@@ -161,7 +162,7 @@ a backlog issue. Seeds are independent unless noted.
 
 ---
 
-### S-14 · Show API key source in `/youtube:status`  *(code+tests, ~30–45 min)*
+### S-14 · Show API key source in `/youtube:status`  *(code+tests, ~30–45 min, **done**)*
 
 **Fixes:** TD-10
 
@@ -171,8 +172,8 @@ a backlog issue. Seeds are independent unless noted.
 - Add or extend `tests/auth-status.test.mjs` for each source case.
 
 **Acceptance:**
-- [ ] Status output includes source when configured; never prints the key.
-- [ ] `npm run ci` green.
+- [x] Status output includes source when configured; never prints the key.
+- [x] `npm run ci` green.
 
 ---
 
@@ -191,7 +192,7 @@ a backlog issue. Seeds are independent unless noted.
 
 ---
 
-### S-16 · End-to-end "compare three videos" example  *(docs, ~30–45 min)*
+### S-16 · End-to-end "compare three videos" example  *(docs, ~30–45 min, **done**)*
 
 **Fixes:** TD-12
 
@@ -201,8 +202,8 @@ a backlog issue. Seeds are independent unless noted.
 - Show the natural-language prompt and the expected tool sequence with sample truncated output.
 
 **Acceptance:**
-- [ ] New example section present and internally consistent with shipped parameters.
-- [ ] `npm run ci` green.
+- [x] New example section present and internally consistent with shipped parameters.
+- [x] `npm run ci` green.
 
 ---
 
