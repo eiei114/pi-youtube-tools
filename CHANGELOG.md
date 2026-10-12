@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.14] - 2026-10-12
+
+### Fixed
+
+- Avoid allocating intermediate copies of transcript segments when generating key segments.
+
 ## [0.1.13] - 2026-09-30
 
 ### Changed
