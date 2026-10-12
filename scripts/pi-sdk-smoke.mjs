@@ -90,6 +90,14 @@ function readAudit(path) {
   });
 }
 
+function stableEvidence(value) {
+  if (Array.isArray(value)) return value.map(stableEvidence);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => !["id", "toolCallId", "timestamp", "durationMs"].includes(key))
+    .map(([key, item]) => [key, stableEvidence(item)]));
+}
+
 function runProcess(name, executable, args, input, env = testEnv) {
   const result = spawnSync(executable, args, {
     cwd: root,
@@ -228,7 +236,7 @@ async function runPi(name) {
   result.evidence = JSON.stringify({
     exit_code: result.exitCode,
     agent_settled: result.agentSettled,
-    records: relevantRecords,
+    records: stableEvidence(relevantRecords),
     audit: result.audit,
     diagnostics,
     process_error: result.processError,
