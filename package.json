@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test tests/*.test.mjs tests/release-trigger-contract.test.mjs",
     "ci": "npm run typecheck && npm test && npm run smoke:pi && npm run pack:check",
     "pack:check": "npm pack --dry-run",
     "smoke:pi": "node scripts/pi-sdk-smoke.mjs",
