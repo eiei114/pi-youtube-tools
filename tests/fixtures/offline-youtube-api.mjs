@@ -16,9 +16,14 @@ function jsonResponse(data, status = 200) {
 globalThis.fetch = async (input) => {
   const url = new URL(input instanceof Request ? input.url : String(input));
   if (url.hostname === "www.googleapis.com" && url.pathname === "/youtube/v3/search") {
-    if (url.searchParams.get("q") === "offline-error") {
+    const query = url.searchParams.get("q");
+    if (query === "offline-error") {
       audit(url.pathname, "quota_error");
       return jsonResponse({ error: { message: "Offline smoke quota exceeded" } }, 403);
+    }
+    if (!["deterministic smoke", "reload smoke"].includes(query)) {
+      audit(url.pathname, "unexpected_query");
+      return jsonResponse({ error: { message: "Unexpected offline smoke search query" } }, 400);
     }
     audit(url.pathname, "fixture_success");
     return jsonResponse({
@@ -36,6 +41,10 @@ globalThis.fetch = async (input) => {
   }
 
   if (url.hostname === "www.googleapis.com" && url.pathname === "/youtube/v3/videos") {
+    if (url.searchParams.get("id") !== "p1SmokeTest") {
+      audit(url.pathname, "unexpected_video_id");
+      return jsonResponse({ error: { message: "Unexpected offline smoke video id" } }, 400);
+    }
     audit(url.pathname, "fixture_success");
     return jsonResponse({
       items: [{
