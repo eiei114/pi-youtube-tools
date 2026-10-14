@@ -2,6 +2,10 @@
 
 ## [0.1.14] - 2026-10-12
 
+### Fixed
+
+- Avoid allocating intermediate copies of transcript segments when generating key segments.
+
 ### Changed
 
 - Verify extension compatibility with the Pi SDK 1.1.0 release.

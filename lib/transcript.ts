@@ -8,6 +8,8 @@ export interface TranscriptSegment {
   text: string;
 }
 
+type TranscriptSegmentView = Pick<TranscriptSegment, "offset" | "text">;
+
 export interface TranscriptResult {
   format: TranscriptFormat;
   text?: string;
@@ -72,11 +74,11 @@ const TRANSCRIPT_ERROR_NAMES = {
   videoUnavailable: "YoutubeTranscriptVideoUnavailableError",
 } as const;
 
-function segmentStartSeconds(segment: TranscriptSegment): number {
+function segmentStartSeconds(segment: TranscriptSegmentView): number {
   return segment.offset;
 }
 
-function extractHook(segments: TranscriptSegment[]): string {
+function extractHook(segments: readonly TranscriptSegmentView[]): string {
   let hook = "";
   for (const segment of segments) {
     if (segmentStartSeconds(segment) < HOOK_DURATION_SECONDS) {
@@ -88,7 +90,7 @@ function extractHook(segments: TranscriptSegment[]): string {
   return hook.trim();
 }
 
-function extractOutro(segments: TranscriptSegment[]): string {
+function extractOutro(segments: readonly TranscriptSegmentView[]): string {
   if (segments.length === 0) return "";
 
   const lastStart = segmentStartSeconds(segments[segments.length - 1]!);
@@ -97,7 +99,7 @@ function extractOutro(segments: TranscriptSegment[]): string {
   return outroSegments.map((segment) => segment.text).join(" ").trim();
 }
 
-function toTranscriptResult(segments: TranscriptSegment[], format: TranscriptFormat): TranscriptResult {
+function toTranscriptResult(segments: readonly TranscriptSegmentView[], format: TranscriptFormat): TranscriptResult {
   if (format === "full_text") {
     return {
       format,
@@ -263,11 +265,7 @@ export async function getTranscriptWithDiagnostics(
 
   try {
     const raw = await transcriptFetcher(videoId, { lang });
-    const segments: TranscriptSegment[] = raw.map((item) => ({
-      offset: item.offset,
-      duration: item.duration,
-      text: item.text,
-    }));
+    const segments: readonly TranscriptSegmentView[] = raw;
 
     if (segments.length === 0) {
       return {

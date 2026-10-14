@@ -35,6 +35,29 @@ test("getTranscriptWithDiagnostics returns transcript on successful fetch", asyn
   });
 });
 
+test("key_segments processing skips unused duration metadata", async () => {
+  let durationReads = 0;
+  const result = await transcript.getTranscriptWithDiagnostics("abc12345678", {
+    fetcher: async () => [{
+      offset: 0,
+      text: "hello",
+      get duration() {
+        durationReads += 1;
+        return 1;
+      },
+    }],
+  });
+
+  assert.deepEqual(result, {
+    transcript: {
+      format: "key_segments",
+      hook: "hello",
+      outro: "hello",
+    },
+  });
+  assert.equal(durationReads, 0);
+});
+
 test("getTranscript import remains available for existing callers", () => {
   assert.equal(typeof transcript.getTranscript, "function");
 });
