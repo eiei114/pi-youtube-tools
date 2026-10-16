@@ -2,10 +2,10 @@
   "schema_version": 1,
   "verification_contract": "pi-sdk-behavior-v2",
   "sdk_versions": {
-    "@earendil-works/pi-agent-core": "1.1.0",
-    "@earendil-works/pi-ai": "1.1.0",
-    "@earendil-works/pi-coding-agent": "1.1.0",
-    "@earendil-works/pi-tui": "1.1.0"
+    "@earendil-works/pi-agent-core": "1.2.0",
+    "@earendil-works/pi-ai": "1.2.0",
+    "@earendil-works/pi-coding-agent": "1.2.0",
+    "@earendil-works/pi-tui": "1.2.0"
   },
   "platform": "win32",
   "model_inference": "deterministic offline provider; actual Pi RPC host, package extension lifecycle and tool executions",
@@ -90,12 +90,12 @@
       "command": "npm run smoke:pi",
       "exit_code": 0,
       "passed": true,
-      "evidence": "{\"exit_code\":0,\"stdout\":\"1.1.0\",\"diagnostics\":[]}",
+      "evidence": "{\"exit_code\":0,\"stdout\":\"1.2.0\",\"diagnostics\":[]}",
       "assertions": [
         {
           "id": "native_shell_boundary",
           "expected": "The native host shell launches the locally pinned Pi CLI and returns exactly its installed version",
-          "observed": "{\"exitCode\":0,\"stdout\":\"1.1.0\",\"expectedVersion\":\"1.1.0\"}",
+          "observed": "{\"exitCode\":0,\"stdout\":\"1.2.0\",\"expectedVersion\":\"1.2.0\"}",
           "passed": true
         }
       ]

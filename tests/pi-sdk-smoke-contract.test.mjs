@@ -33,7 +33,7 @@ const observation = (records, extras = {}) => ({
   exitCode: 0,
   fullOutput: "",
   stdout: "",
-  expectedVersion: "1.1.0",
+  expectedVersion: "1.2.0",
   ...extras,
 });
 const toolEnd = (toolName, result, isError = false) => ({
@@ -45,7 +45,7 @@ const toolEnd = (toolName, result, isError = false) => ({
 
 test("contract names and JSONL parser match the pinned Pi smoke format", () => {
   assert.equal(VERIFICATION_CONTRACT, "pi-sdk-behavior-v2");
-  assert.deepEqual(Object.values(SDK_VERSIONS), ["1.1.0", "1.1.0", "1.1.0", "1.1.0"]);
+  assert.deepEqual(Object.values(SDK_VERSIONS), ["1.2.0", "1.2.0", "1.2.0", "1.2.0"]);
   assert.deepEqual(parseJsonLines(`not-json\r\n${JSON.stringify(status)}\n`), [status]);
 });
 
@@ -127,8 +127,8 @@ test("reload requires second-process registration, feature output, and clean shu
 });
 
 test("native shell must report the exact pinned version", () => {
-  assert.equal(behaviorAssertions("host_shell", observation([], { stdout: "1.1.0\r\n" }))[0].passed, true);
-  for (const output of ["", "11.1.0", "1.1.0 with extra output", "1.0.0"]) {
+  assert.equal(behaviorAssertions("host_shell", observation([], { stdout: "1.2.0\r\n" }))[0].passed, true);
+  for (const output of ["", "11.2.0", "1.2.0 with extra output", "1.0.0"]) {
     assert.equal(behaviorAssertions("host_shell", observation([], { stdout: output }))[0].passed, false);
   }
 });

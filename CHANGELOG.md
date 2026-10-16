@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.15] - 2026-10-16
+
+### Changed
+
+- Verify extension compatibility with the Pi SDK 1.2.0 release.
+
 ## [0.1.14] - 2026-10-12
 
 ### Fixed
