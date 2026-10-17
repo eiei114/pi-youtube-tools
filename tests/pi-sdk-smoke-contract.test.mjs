@@ -65,22 +65,36 @@ test("extension registration requires the actual status and all real package too
 test("happy path validates all feature responses and the offline network boundary", () => {
   const records = [
     toolEnd("youtube_search", { details: { results: [{ videoId: "p1SmokeTest", title: "Offline Pi SDK smoke video" }] } }),
-    toolEnd("youtube_video_details", { details: { details: { p1SmokeTest: { title: "Offline Pi SDK smoke video", viewCount: 12345 } } } }),
+    toolEnd("youtube_video_details", { details: { count: 2, details: {
+      p1SmokeTest: { title: "Offline Pi SDK smoke video", viewCount: 12345 },
+      abcdefghijk: { title: "Second offline Pi SDK smoke video", viewCount: 42 },
+    } } }),
     toolEnd("youtube_transcript", { details: {
-      transcripts: { p1SmokeTest: null },
-      transcriptDiagnostics: { p1SmokeTest: { reasonCode: "network_or_upstream_error" } },
+      count: 2,
+      transcripts: { p1SmokeTest: null, abcdefghijk: null },
+      transcriptDiagnostics: {
+        p1SmokeTest: { reasonCode: "network_or_upstream_error" },
+        abcdefghijk: { reasonCode: "network_or_upstream_error" },
+      },
     } }),
   ];
   const audit = [
     { path: "/youtube/v3/search", outcome: "fixture_success" },
-    { path: "/youtube/v3/videos", outcome: "fixture_success" },
-    { path: "/youtube/api/timedtext", outcome: "blocked_offline_request" },
+    { path: "/youtube/v3/videos", outcome: "fixture_success", requestedIds: ["p1SmokeTest", "abcdefghijk"] },
+    { path: "/watch", outcome: "blocked_offline_request", videoId: "p1SmokeTest" },
+    { path: "/watch", outcome: "blocked_offline_request", videoId: "abcdefghijk" },
   ];
   assert.equal(behaviorAssertions("happy_path", observation(records, { audit }))[0].passed, true);
   for (const incomplete of [records.slice(0, 2), [records[0], records[1], toolEnd("youtube_transcript", { details: {} })]]) {
     assert.equal(behaviorAssertions("happy_path", observation(incomplete, { audit }))[0].passed, false);
   }
   assert.equal(behaviorAssertions("happy_path", observation(records, { audit: audit.slice(0, 2) }))[0].passed, false);
+  const wrongOrderAudit = audit.map((item) => item.path === "/youtube/v3/videos"
+    ? { ...item, requestedIds: ["abcdefghijk", "p1SmokeTest"] }
+    : item);
+  assert.equal(behaviorAssertions("happy_path", observation(records, { audit: wrongOrderAudit }))[0].passed, false);
+  const missingTranscriptId = audit.filter((item) => item.videoId !== "abcdefghijk");
+  assert.equal(behaviorAssertions("happy_path", observation(records, { audit: missingTranscriptId }))[0].passed, false);
 });
 
 test("error path requires the actual handled API error response", () => {

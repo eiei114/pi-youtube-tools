@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-const { extractVideoId, requireVideoId, resolveVideoIds } = await import("../lib/video-id.ts");
+const { extractVideoId, requireVideoId, resolveVideoIds, resolveVideoInputs } = await import("../lib/video-id.ts");
 const { InvalidVideoInputError } = await import("../lib/errors.ts");
 
 test("extractVideoId accepts raw 11-char id", () => {
@@ -74,4 +74,13 @@ test("resolveVideoIds deduplicates parsed ids", () => {
     "https://youtu.be/dQw4w9WgXcQ",
   ]);
   assert.deepEqual(ids, ["dQw4w9WgXcQ"]);
+});
+
+test("resolveVideoInputs combines optional single and multiple inputs consistently", () => {
+  assert.deepEqual(
+    resolveVideoInputs("https://youtu.be/dQw4w9WgXcQ", ["dQw4w9WgXcQ", "abcdefghijk"]),
+    ["dQw4w9WgXcQ", "abcdefghijk"],
+  );
+  assert.deepEqual(resolveVideoInputs(undefined, []), []);
+  assert.throws(() => resolveVideoInputs(undefined, ["invalid"]), InvalidVideoInputError);
 });

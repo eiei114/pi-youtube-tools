@@ -8,7 +8,7 @@ import {
   type TranscriptFormat,
   type TranscriptResult,
 } from "../lib/transcript.ts";
-import { requireVideoId, resolveVideoIds } from "../lib/video-id.ts";
+import { resolveVideoInputs } from "../lib/video-id.ts";
 import {
   formatSearchResults,
   formatToolError,
@@ -99,15 +99,11 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params) {
       try {
-        const inputs = [
-          ...(params.videoId ? [params.videoId] : []),
-          ...(params.videoIds ?? []),
-        ];
-        if (inputs.length === 0) {
+        const ids = resolveVideoInputs(params.videoId, params.videoIds);
+        if (ids.length === 0) {
           return toolText("Provide videoId or videoIds.", { error: "missing_input" });
         }
 
-        const ids = resolveVideoIds(inputs);
         const raw = await getVideoDetails(ids, {
           includeDescription: params.includeDescription === true,
         });
@@ -165,16 +161,11 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params) {
       try {
-        const inputs = [
-          ...(params.videoId ? [params.videoId] : []),
-          ...(params.videoIds ?? []),
-        ];
-        if (inputs.length === 0) {
+        const uniqueIds = resolveVideoInputs(params.videoId, params.videoIds);
+        if (uniqueIds.length === 0) {
           return toolText("Provide videoId or videoIds.", { error: "missing_input" });
         }
 
-        const ids = inputs.map((input) => requireVideoId(input));
-        const uniqueIds = [...new Set(ids)];
         const format = (params.format ?? "key_segments") as TranscriptFormat;
         const lang = params.lang ?? "en";
 

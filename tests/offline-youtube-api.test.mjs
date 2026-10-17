@@ -24,9 +24,9 @@ test("offline search fixture accepts only the smoke contract queries", async () 
 });
 
 test("offline video details fixture rejects unexpected ids", async () => {
-  const expected = await fetchFixture(apiUrl("videos", { id: "p1SmokeTest" }));
+  const expected = await fetchFixture(apiUrl("videos", { id: "p1SmokeTest,abcdefghijk" }));
   assert.equal(expected.status, 200);
-  assert.equal((await expected.json()).items[0].id, "p1SmokeTest");
+  assert.deepEqual((await expected.json()).items.map((item) => item.id), ["p1SmokeTest", "abcdefghijk"]);
 
   const response = await fetchFixture(apiUrl("videos", { id: "wrong-id" }));
   assert.equal(response.status, 400);
