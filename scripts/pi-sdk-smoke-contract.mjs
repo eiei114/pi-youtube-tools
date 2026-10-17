@@ -76,26 +76,41 @@ export function behaviorAssertions(name, observation) {
     const details = toolResult(records, "youtube_video_details");
     const transcript = toolResult(records, "youtube_transcript");
     const searchData = search?.result?.details;
-    const video = details?.result?.details?.details?.p1SmokeTest;
+    const detailsData = details?.result?.details;
+    const videos = detailsData?.details;
     const transcriptData = transcript?.result?.details;
+    const expectedVideoIds = ["p1SmokeTest", "abcdefghijk"];
+    const transcriptVideoIds = audit
+      .filter((item) => item.path === "/watch" && item.outcome === "blocked_offline_request")
+      .map((item) => item.videoId);
     const observed = {
       search: searchData ?? null,
-      video: video ?? null,
+      videoDetails: detailsData ?? null,
       transcript: transcriptData ?? null,
-      audit,
+      normalizedVideoRequests: audit.filter((item) => item.path === "/youtube/v3/videos"),
+      transcriptVideoIds,
     };
     const passed = search?.isError === false
       && searchData?.results?.some((item) => item.videoId === "p1SmokeTest"
         && item.title === "Offline Pi SDK smoke video")
       && details?.isError === false
-      && video?.title === "Offline Pi SDK smoke video"
-      && video?.viewCount === 12345
+      && detailsData?.count === expectedVideoIds.length
+      && JSON.stringify(Object.keys(videos ?? {})) === JSON.stringify(expectedVideoIds)
+      && videos?.p1SmokeTest?.title === "Offline Pi SDK smoke video"
+      && videos?.p1SmokeTest?.viewCount === 12345
+      && videos?.abcdefghijk?.title === "Second offline Pi SDK smoke video"
+      && audit.some((item) => item.path === "/youtube/v3/videos"
+        && item.outcome === "fixture_success"
+        && JSON.stringify(item.requestedIds) === JSON.stringify(expectedVideoIds))
       && transcript?.isError === false
-      && transcriptData?.transcripts?.p1SmokeTest === null
-      && transcriptData?.transcriptDiagnostics?.p1SmokeTest?.reasonCode === "network_or_upstream_error"
+      && transcriptData?.count === expectedVideoIds.length
+      && JSON.stringify(Object.keys(transcriptData?.transcripts ?? {})) === JSON.stringify(expectedVideoIds)
+      && JSON.stringify(Object.keys(transcriptData?.transcriptDiagnostics ?? {})) === JSON.stringify(expectedVideoIds)
+      && expectedVideoIds.every((id) => transcriptData?.transcripts?.[id] === null
+        && transcriptData?.transcriptDiagnostics?.[id]?.reasonCode === "network_or_upstream_error")
+      && JSON.stringify(transcriptVideoIds) === JSON.stringify(expectedVideoIds)
       && audit.some((item) => item.path === "/youtube/v3/search" && item.outcome === "fixture_success")
-      && audit.some((item) => item.path === "/youtube/v3/videos" && item.outcome === "fixture_success")
-      && audit.some((item) => item.outcome === "blocked_offline_request");
+      && audit.some((item) => item.path === "/watch" && item.outcome === "blocked_offline_request");
     return [assertion(
       "feature_response",
       "Actual extension tools return deterministic search/video data and handle transcript network unavailability",

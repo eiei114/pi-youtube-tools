@@ -24,8 +24,23 @@ function callsForCase(caseName) {
   if (caseName === "happy_path") {
     return [
       { name: "youtube_search", arguments: { query: "deterministic smoke", maxResults: 1 } },
-      { name: "youtube_video_details", arguments: { videoId: "p1SmokeTest", includeDescription: true } },
-      { name: "youtube_transcript", arguments: { videoId: "p1SmokeTest", lang: "en", format: "full_text" } },
+      {
+        name: "youtube_video_details",
+        arguments: {
+          videoId: "p1SmokeTest",
+          videoIds: ["https://youtu.be/p1SmokeTest", "abcdefghijk"],
+          includeDescription: true,
+        },
+      },
+      {
+        name: "youtube_transcript",
+        arguments: {
+          videoId: "p1SmokeTest",
+          videoIds: ["https://youtu.be/p1SmokeTest", "abcdefghijk"],
+          lang: "en",
+          format: "full_text",
+        },
+      },
     ];
   }
   if (caseName === "error_path") {
