@@ -29,3 +29,8 @@ export function requireVideoId(input: string): string {
 export function resolveVideoIds(inputs: string[]): string[] {
   return [...new Set(inputs.map((input) => requireVideoId(input)))];
 }
+
+export function resolveVideoInputs(videoId?: string, videoIds: string[] = []): string[] {
+  const inputs = [...(videoId ? [videoId] : []), ...videoIds];
+  return resolveVideoIds(inputs);
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.16] - 2026-10-18
+
+### Changed
+
+- Centralize video ID input resolution shared by video details and transcript tools.
+
 ## [0.1.15] - 2026-10-16
 
 ### Changed
