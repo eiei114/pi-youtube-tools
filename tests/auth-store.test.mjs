@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -31,6 +31,13 @@ test("clearStoredApiKey removes stored key", async () => {
   await withAgentDir(async ({ saveStoredApiKey, loadStoredApiKey, clearStoredApiKey }) => {
     saveStoredApiKey("test-key");
     clearStoredApiKey();
+    assert.equal(loadStoredApiKey(), undefined);
+  });
+});
+
+test("loadStoredApiKey treats malformed stored JSON as missing", async () => {
+  await withAgentDir(async ({ getAuthFilePath, loadStoredApiKey }) => {
+    await writeFile(getAuthFilePath(), "{malformed JSON", "utf-8");
     assert.equal(loadStoredApiKey(), undefined);
   });
 });
