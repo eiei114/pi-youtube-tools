@@ -212,5 +212,15 @@ test("extractOutro keeps trailing segments", () => {
     { offset: 120, duration: 1, text: "ending soon" },
     { offset: 130, duration: 1, text: "final CTA" },
   ];
-  assert.match(transcriptTesting.extractOutro(segments), /final CTA/);
+  assert.equal(transcriptTesting.extractOutro(segments), "ending soon final CTA");
+});
+
+test("extractOutro preserves input order for unsorted segments", () => {
+  const segments = [
+    { offset: 130, text: "last" },
+    { offset: 0, text: "outside outro" },
+    { offset: 120, text: "ending soon" },
+  ];
+
+  assert.equal(transcriptTesting.extractOutro(segments), "last ending soon");
 });

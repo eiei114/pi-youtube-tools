@@ -95,8 +95,24 @@ function extractOutro(segments: readonly TranscriptSegmentView[]): string {
 
   const lastStart = segmentStartSeconds(segments[segments.length - 1]!);
   const outroStart = Math.max(0, lastStart - OUTRO_DURATION_SECONDS);
-  const outroSegments = segments.filter((segment) => segmentStartSeconds(segment) >= outroStart);
-  return outroSegments.map((segment) => segment.text).join(" ").trim();
+  // Use the tail scan for chronological captions; preserve custom fetcher order otherwise.
+  let previousOffset = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < segments.length; index += 1) {
+    const offset = segmentStartSeconds(segments[index]!);
+    if (!(offset >= previousOffset)) {
+      const outroSegments = segments.filter((segment) => segmentStartSeconds(segment) >= outroStart);
+      return outroSegments.map((segment) => segment.text).join(" ").trim();
+    }
+    previousOffset = offset;
+  }
+
+  const outroTexts: string[] = [];
+  for (let index = segments.length - 1; index >= 0; index -= 1) {
+    const segment = segments[index]!;
+    if (segmentStartSeconds(segment) < outroStart) break;
+    outroTexts.push(segment.text);
+  }
+  return outroTexts.reverse().join(" ").trim();
 }
 
 function toTranscriptResult(segments: readonly TranscriptSegmentView[], format: TranscriptFormat): TranscriptResult {

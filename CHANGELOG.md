@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.17] - 2026-10-27
+
+### Changed
+
+- Extract key-segment outros from the transcript tail instead of scanning all caption segments.
+
 ## [0.1.16] - 2026-10-18
 
 ### Changed
