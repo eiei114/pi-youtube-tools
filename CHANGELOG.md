@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.18] - 2026-11-02
+
+### Fixed
+
+- Read Pi SDK smoke versions from the manifest pins so compatible SDK updates do not fail on stale hard-coded versions.
+
 ## [0.1.17] - 2026-10-27
 
 ### Changed

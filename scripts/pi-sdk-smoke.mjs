@@ -13,7 +13,7 @@ import {
   behaviorAssertions,
   EXTENSION_LOAD_ERROR_PATTERN,
   parseJsonLines,
-  SDK_VERSIONS,
+  sdkVersionsFromManifest,
   UNHANDLED_ERROR_PATTERN,
   VERIFICATION_CONTRACT,
 } from "./pi-sdk-smoke-contract.mjs";
@@ -24,12 +24,13 @@ const reportPath = process.argv.includes("--update-curated-report")
   : resolve(root, ".tmp/pi-sdk-smoke.json");
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const manifest = readJson(resolve(root, "package.json"));
+const SDK_VERSIONS = sdkVersionsFromManifest(manifest);
 const providerFixture = resolve(root, "tests/fixtures/pi-sdk-smoke-provider.mjs");
 
 const installedVersions = Object.fromEntries(Object.entries(SDK_VERSIONS).map(([name, expected]) => {
   const actual = readJson(resolve(root, "node_modules", name, "package.json")).version;
-  if (manifest.devDependencies?.[name] !== expected || actual !== expected) {
-    throw new Error(`Smoke requires exact SDK pin ${name}@${expected}; manifest=${manifest.devDependencies?.[name]}, installed=${actual}`);
+  if (actual !== expected) {
+    throw new Error(`Smoke requires exact SDK pin ${name}@${expected}; installed=${actual}`);
   }
   return [name, actual];
 }));

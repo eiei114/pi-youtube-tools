@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   behaviorAssertions,
   parseJsonLines,
-  SDK_VERSIONS,
+  SDK_PACKAGE_NAMES,
+  sdkVersionsFromManifest,
   VERIFICATION_CONTRACT,
 } from "../scripts/pi-sdk-smoke-contract.mjs";
+
+const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const SDK_VERSIONS = sdkVersionsFromManifest(manifest);
 
 const status = {
   type: "extension_ui_request",
@@ -33,7 +38,7 @@ const observation = (records, extras = {}) => ({
   exitCode: 0,
   fullOutput: "",
   stdout: "",
-  expectedVersion: "1.2.0",
+  expectedVersion: SDK_VERSIONS["@earendil-works/pi-coding-agent"],
   ...extras,
 });
 const toolEnd = (toolName, result, isError = false) => ({
@@ -45,7 +50,9 @@ const toolEnd = (toolName, result, isError = false) => ({
 
 test("contract names and JSONL parser match the pinned Pi smoke format", () => {
   assert.equal(VERIFICATION_CONTRACT, "pi-sdk-behavior-v2");
-  assert.deepEqual(Object.values(SDK_VERSIONS), ["1.2.0", "1.2.0", "1.2.0", "1.2.0"]);
+  assert.deepEqual(SDK_VERSIONS, Object.fromEntries(SDK_PACKAGE_NAMES.map((name) => [name, manifest.devDependencies[name]])));
+  const alternatePins = Object.fromEntries(SDK_PACKAGE_NAMES.map((name, index) => [name, `9.0.${index}`]));
+  assert.deepEqual(sdkVersionsFromManifest({ devDependencies: alternatePins }), alternatePins);
   assert.deepEqual(parseJsonLines(`not-json\r\n${JSON.stringify(status)}\n`), [status]);
 });
 
@@ -141,8 +148,10 @@ test("reload requires second-process registration, feature output, and clean shu
 });
 
 test("native shell must report the exact pinned version", () => {
-  assert.equal(behaviorAssertions("host_shell", observation([], { stdout: "1.2.0\r\n" }))[0].passed, true);
-  for (const output of ["", "11.2.0", "1.2.0 with extra output", "1.0.0"]) {
+  const expectedVersion = SDK_VERSIONS["@earendil-works/pi-coding-agent"];
+  const otherVersion = expectedVersion === "1.0.0" ? "1.0.1" : "1.0.0";
+  assert.equal(behaviorAssertions("host_shell", observation([], { stdout: `${expectedVersion}\r\n` }))[0].passed, true);
+  for (const output of ["", `11.${expectedVersion}`, `${expectedVersion} with extra output`, otherVersion]) {
     assert.equal(behaviorAssertions("host_shell", observation([], { stdout: output }))[0].passed, false);
   }
 });
