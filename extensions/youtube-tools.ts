@@ -14,7 +14,6 @@ import {
   formatToolError,
   formatTranscriptMap,
   formatVideoDetailsMap,
-  formatDescription,
   MAX_DESCRIPTION_CHARS,
   compactSearchResultDetails,
   compactTranscriptDetails,
@@ -108,19 +107,11 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
           includeDescription: params.includeDescription === true,
         });
 
-        const details = Object.fromEntries(
-          Object.entries(raw).map(([id, item]) => {
-            if (!item) return [id, null];
-            const description = formatDescription(item.description, params.includeDescription === true);
-            return [
-              id,
-              description === undefined ? { ...item, description: undefined } : { ...item, description },
-            ];
-          }),
-        );
-        const compactDetails = compactVideoDetailsMap(details);
-
-        const text = formatVideoDetailsMap(compactDetails);
+        // Render the text from the raw record and build the structured payload
+        // separately: each formatter applies its own compaction, so feeding one
+        // projection into the other would format fields such as duration twice.
+        const text = formatVideoDetailsMap(raw);
+        const compactDetails = compactVideoDetailsMap(raw);
         return toolText(text, { count: ids.length, details: compactDetails });
       } catch (error) {
         return toolError(error);

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.19] - 2026-11-05
+
+### Fixed
+
+- Report the human-readable duration in `youtube_video_details` text output instead of `unknown`, and keep the text and `details` payload consistent for durations and HTML-encoded fields.
+
 ## [0.1.18] - 2026-11-02
 
 ### Fixed
