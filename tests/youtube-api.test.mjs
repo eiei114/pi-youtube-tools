@@ -116,6 +116,29 @@ test("searchVideos preserves unrelated AbortError rejections", async () => {
   );
 });
 
+test("searchVideos preserves network failures while reading a response body", async () => {
+  const networkError = new TypeError("fetch failed");
+  const fetchFn = async () =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.error(networkError);
+        },
+      }),
+      { status: 200 },
+    );
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => {
+      assert.equal(error, networkError);
+      assert.equal(error.message, "fetch failed");
+      assert.ok(!(error instanceof YoutubeApiError));
+      return true;
+    },
+  );
+});
+
 test("searchVideos reports HTML 502 responses without exposing the response body", async () => {
   const apiKey = "test-key";
   const responseBody = `<html>Gateway error for ${apiKey}</html>`;

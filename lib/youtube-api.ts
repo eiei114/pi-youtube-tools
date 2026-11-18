@@ -81,6 +81,7 @@ async function youtubeGet(
       throw new YoutubeApiError(`YouTube API request timed out after ${requestTimeoutMs}ms`);
     }
     if (error instanceof Error && error.name === "AbortError") throw error;
+    if (!(error instanceof SyntaxError)) throw error;
 
     const message = res.ok
       ? `YouTube API returned a non-JSON response (HTTP ${res.status})`
