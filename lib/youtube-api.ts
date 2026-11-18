@@ -1,5 +1,5 @@
 import { getYoutubeApiKey } from "./config.ts";
-import { MissingApiKeyError, YoutubeApiError } from "./errors.ts";
+import { InvalidSearchQueryError, MissingApiKeyError, YoutubeApiError } from "./errors.ts";
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
@@ -120,12 +120,19 @@ export async function searchVideos(
     requestTimeoutMs?: number;
   } = {},
 ): Promise<SearchVideoResult[]> {
-  const maxResults = Math.min(Math.max(options.maxResults ?? 5, 1), 10);
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) throw new InvalidSearchQueryError();
+
+  const requestedMaxResults = options.maxResults ?? 5;
+  const normalizedMaxResults = Number.isFinite(requestedMaxResults)
+    ? Math.trunc(requestedMaxResults)
+    : 5;
+  const maxResults = Math.min(Math.max(normalizedMaxResults, 1), 10);
   const data = (await youtubeGet(
     "/search",
     {
       part: "snippet",
-      q: query,
+      q: trimmedQuery,
       maxResults: String(maxResults),
       type: "video",
       order: options.order ?? "relevance",

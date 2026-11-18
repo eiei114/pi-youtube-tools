@@ -56,13 +56,14 @@ export function registerYoutubeTools(pi: ExtensionAPI) {
     }),
     async execute(_toolCallId, params) {
       try {
-        const results = await searchVideos(params.query, {
+        const query = params.query.trim();
+        const results = await searchVideos(query, {
           maxResults: params.maxResults,
           order: params.order,
         });
         const compactResults = compactSearchResultDetails(results);
-        const text = formatSearchResults(params.query, results);
-        return toolText(text, { query: params.query, count: results.length, results: compactResults });
+        const text = formatSearchResults(query, results);
+        return toolText(text, { query, count: results.length, results: compactResults });
       } catch (error) {
         return toolError(error);
       }

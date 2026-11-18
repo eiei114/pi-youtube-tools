@@ -15,6 +15,13 @@ export class YoutubeApiError extends Error {
   }
 }
 
+export class InvalidSearchQueryError extends Error {
+  constructor() {
+    super("YouTube search query must not be empty.");
+    this.name = "InvalidSearchQueryError";
+  }
+}
+
 export class InvalidVideoInputError extends Error {
   constructor(input: string) {
     super(`Could not parse YouTube video ID from: ${input}`);
