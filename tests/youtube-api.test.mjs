@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 const { searchVideos, getVideoDetails, parseYouTubeNumber } = await import("../lib/youtube-api.ts");
-const { MissingApiKeyError, YoutubeApiError } = await import("../lib/errors.ts");
+const { InvalidSearchQueryError, MissingApiKeyError, YoutubeApiError } = await import("../lib/errors.ts");
 
 test("parseYouTubeNumber handles empty and invalid values", () => {
   assert.equal(parseYouTubeNumber(undefined), 0);
@@ -71,6 +71,71 @@ test("searchVideos maps API response and defaults to five results", async () => 
   assert.equal(results[0]?.videoId, "abc12345678");
   assert.equal(results[0]?.title, "Gameplay");
   assert.equal(requestedMaxResults, "5");
+});
+
+test("searchVideos truncates fractional maxResults to an integer", async () => {
+  let requestedMaxResults = "";
+  const fetchFn = async (url) => {
+    requestedMaxResults = new URL(String(url)).searchParams.get("maxResults");
+    return new Response(JSON.stringify({ items: [] }), { status: 200 });
+  };
+
+  await searchVideos("roblox", { apiKey: "test-key", fetchFn, maxResults: 2.7 });
+  assert.equal(requestedMaxResults, "2");
+});
+
+test("searchVideos defaults non-finite maxResults to five", async () => {
+  let requestedMaxResults = "";
+  const fetchFn = async (url) => {
+    requestedMaxResults = new URL(String(url)).searchParams.get("maxResults");
+    return new Response(JSON.stringify({ items: [] }), { status: 200 });
+  };
+
+  await searchVideos("roblox", { apiKey: "test-key", fetchFn, maxResults: NaN });
+  assert.equal(requestedMaxResults, "5");
+});
+
+test("searchVideos clamps zero and negative maxResults to one", async () => {
+  const requestedMaxResults = [];
+  const fetchFn = async (url) => {
+    requestedMaxResults.push(new URL(String(url)).searchParams.get("maxResults"));
+    return new Response(JSON.stringify({ items: [] }), { status: 200 });
+  };
+
+  await searchVideos("roblox", { apiKey: "test-key", fetchFn, maxResults: 0 });
+  await searchVideos("roblox", { apiKey: "test-key", fetchFn, maxResults: -4 });
+  assert.deepEqual(requestedMaxResults, ["1", "1"]);
+});
+
+test("searchVideos rejects blank queries before calling fetch", async () => {
+  let fetchCalls = 0;
+  const fetchFn = async () => {
+    fetchCalls += 1;
+    return new Response(JSON.stringify({ items: [] }), { status: 200 });
+  };
+
+  for (const query of ["", " \t\n "]) {
+    await assert.rejects(
+      () => searchVideos(query, { apiKey: "test-key", fetchFn }),
+      (error) => {
+        assert.ok(error instanceof InvalidSearchQueryError);
+        assert.equal(error.message, "YouTube search query must not be empty.");
+        return true;
+      },
+    );
+  }
+  assert.equal(fetchCalls, 0);
+});
+
+test("searchVideos sends a trimmed query to the API", async () => {
+  let requestedQuery = "";
+  const fetchFn = async (url) => {
+    requestedQuery = new URL(String(url)).searchParams.get("q");
+    return new Response(JSON.stringify({ items: [] }), { status: 200 });
+  };
+
+  await searchVideos("  roblox gameplay  ", { apiKey: "test-key", fetchFn });
+  assert.equal(requestedQuery, "roblox gameplay");
 });
 
 test("searchVideos translates a stalled fetch into a timeout error", async () => {
