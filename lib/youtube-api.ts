@@ -93,28 +93,11 @@ async function youtubeGet(
   }
 
   if (!res.ok) {
-    const responseError =
-      data !== null && typeof data === "object" && !Array.isArray(data)
-        ? (data as { error?: unknown }).error
-        : undefined;
-    const responseMessage =
-      responseError !== null && typeof responseError === "object" && "message" in responseError
-        ? responseError.message
-        : undefined;
-    const encodedApiKey = new URLSearchParams({ key: apiKey }).toString().slice("key=".length);
-    const safeResponseMessage =
-      typeof responseMessage === "string" &&
-      !responseMessage.includes(apiKey) &&
-      !responseMessage.includes(encodedApiKey) &&
-      !/[<>]/.test(responseMessage)
-        ? responseMessage
-        : undefined;
     const statusMessage = `YouTube API request failed (HTTP ${res.status})`;
-    const message = safeResponseMessage ? `${statusMessage}: ${safeResponseMessage}` : statusMessage;
     if (res.status === 403) {
-      throw new YoutubeApiError(`${message} Check API key, enabled APIs, and quota.`);
+      throw new YoutubeApiError(`${statusMessage} Check API key, enabled APIs, and quota.`);
     }
-    throw new YoutubeApiError(message);
+    throw new YoutubeApiError(statusMessage);
   }
 
   if (data === null || typeof data !== "object" || Array.isArray(data)) {

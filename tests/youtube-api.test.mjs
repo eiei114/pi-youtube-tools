@@ -216,22 +216,25 @@ test("searchVideos rejects JSON success responses that are not objects", async (
   );
 });
 
-test("searchVideos preserves the safe API message and 403 hint for JSON errors", async () => {
+test("searchVideos omits JSON error bodies and preserves the 403 hint", async () => {
+  const apiKey = "test-key";
+  const responseMessage = "The API key is invalid: private-response-detail";
   const fetchFn = async () =>
-    new Response(JSON.stringify({ error: { message: "The API key is invalid" } }), {
+    new Response(JSON.stringify({ error: { message: responseMessage } }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
 
   await assert.rejects(
-    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    () => searchVideos("roblox", { apiKey, fetchFn }),
     (error) => {
       assert.ok(error instanceof YoutubeApiError);
       assert.equal(
         error.message,
-        "YouTube API request failed (HTTP 403): The API key is invalid Check API key, enabled APIs, and quota.",
+        "YouTube API request failed (HTTP 403) Check API key, enabled APIs, and quota.",
       );
-      assert.doesNotMatch(error.message, /test-key/);
+      assert.doesNotMatch(error.message, new RegExp(apiKey));
+      assert.ok(!error.message.includes(responseMessage));
       return true;
     },
   );
