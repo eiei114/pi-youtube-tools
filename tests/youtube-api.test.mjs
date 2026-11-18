@@ -116,6 +116,169 @@ test("searchVideos preserves unrelated AbortError rejections", async () => {
   );
 });
 
+test("searchVideos preserves network failures while reading a response body", async () => {
+  const networkError = new TypeError("fetch failed");
+  const fetchFn = async () =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.error(networkError);
+        },
+      }),
+      { status: 200 },
+    );
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => {
+      assert.equal(error, networkError);
+      assert.equal(error.message, "fetch failed");
+      assert.ok(!(error instanceof YoutubeApiError));
+      return true;
+    },
+  );
+});
+
+test("searchVideos reports HTML 502 responses without exposing the response body", async () => {
+  const apiKey = "test-key";
+  const responseBody = `<html>Gateway error for ${apiKey}</html>`;
+  const fetchFn = async () => new Response(responseBody, { status: 502 });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey, fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(error.message, "YouTube API request failed (HTTP 502)");
+      assert.ok(error.cause instanceof SyntaxError);
+      assert.doesNotMatch(error.message, /test-key|Gateway error|<html>/);
+      return true;
+    },
+  );
+});
+
+test("searchVideos reports an empty 500 response with the HTTP status", async () => {
+  const fetchFn = async () => new Response(null, { status: 500 });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(error.message, "YouTube API request failed (HTTP 500)");
+      assert.ok(error.cause instanceof SyntaxError);
+      return true;
+    },
+  );
+});
+
+test("searchVideos preserves the 403 hint for non-JSON responses", async () => {
+  const fetchFn = async () => new Response("<html>denied test-key</html>", { status: 403 });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(
+        error.message,
+        "YouTube API request failed (HTTP 403) Check API key, enabled APIs, and quota.",
+      );
+      assert.ok(error.cause instanceof SyntaxError);
+      assert.doesNotMatch(error.message, /test-key|denied|<html>/);
+      return true;
+    },
+  );
+});
+
+test("searchVideos reports non-JSON success responses with the HTTP status", async () => {
+  const fetchFn = async () => new Response("not json", { status: 200 });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(error.message, "YouTube API returned a non-JSON response (HTTP 200)");
+      assert.ok(error.cause instanceof SyntaxError);
+      return true;
+    },
+  );
+});
+
+test("searchVideos rejects JSON success responses that are not objects", async () => {
+  const fetchFn = async () => new Response("null", { status: 200 });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(error.message, "YouTube API returned an invalid JSON response (HTTP 200)");
+      assert.ok(error.cause instanceof TypeError);
+      return true;
+    },
+  );
+});
+
+test("searchVideos omits JSON error bodies and preserves the 403 hint", async () => {
+  const apiKey = "test-key";
+  const responseMessage = "The API key is invalid: private-response-detail";
+  const fetchFn = async () =>
+    new Response(JSON.stringify({ error: { message: responseMessage } }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey, fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(
+        error.message,
+        "YouTube API request failed (HTTP 403) Check API key, enabled APIs, and quota.",
+      );
+      assert.doesNotMatch(error.message, new RegExp(apiKey));
+      assert.ok(!error.message.includes(responseMessage));
+      return true;
+    },
+  );
+});
+
+test("searchVideos uses the status and 403 hint when JSON has no error message", async () => {
+  const fetchFn = async () =>
+    new Response("{}", { status: 403, headers: { "Content-Type": "application/json" } });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey: "test-key", fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(
+        error.message,
+        "YouTube API request failed (HTTP 403) Check API key, enabled APIs, and quota.",
+      );
+      return true;
+    },
+  );
+});
+
+test("searchVideos does not echo an API key from a JSON error message", async () => {
+  const apiKey = "test-key";
+  const fetchFn = async () =>
+    new Response(JSON.stringify({ error: { message: `Invalid key ${apiKey}` } }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+
+  await assert.rejects(
+    () => searchVideos("roblox", { apiKey, fetchFn }),
+    (error) => {
+      assert.ok(error instanceof YoutubeApiError);
+      assert.equal(
+        error.message,
+        "YouTube API request failed (HTTP 403) Check API key, enabled APIs, and quota.",
+      );
+      assert.doesNotMatch(error.message, /test-key/);
+      return true;
+    },
+  );
+});
+
 test("searchVideos caps maxResults to a lean upper bound", async () => {
   let requestedMaxResults = "";
   const fetchFn = async (url) => {

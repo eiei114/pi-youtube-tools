@@ -63,15 +63,9 @@ async function youtubeGet(
   const requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
   const signal = AbortSignal.timeout(requestTimeoutMs);
   let res: Response;
-  let data: {
-    error?: { message?: string; errors?: Array<{ reason?: string }> };
-  };
 
   try {
     res = await fetchFn(url.toString(), { signal });
-    data = (await res.json()) as {
-      error?: { message?: string; errors?: Array<{ reason?: string }> };
-    };
   } catch (error) {
     if (signal.aborted) {
       throw new YoutubeApiError(`YouTube API request timed out after ${requestTimeoutMs}ms`);
@@ -79,12 +73,38 @@ async function youtubeGet(
     throw error;
   }
 
-  if (!res.ok) {
-    const message = data.error?.message ?? `YouTube API request failed (HTTP ${res.status})`;
-    if (res.status === 403) {
-      throw new YoutubeApiError(`${message} Check API key, enabled APIs, and quota.`, data.error);
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch (error) {
+    if (signal.aborted) {
+      throw new YoutubeApiError(`YouTube API request timed out after ${requestTimeoutMs}ms`);
     }
-    throw new YoutubeApiError(message, data.error);
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    if (!(error instanceof SyntaxError)) throw error;
+
+    const message = res.ok
+      ? `YouTube API returned a non-JSON response (HTTP ${res.status})`
+      : `YouTube API request failed (HTTP ${res.status})`;
+    throw new YoutubeApiError(
+      res.status === 403 ? `${message} Check API key, enabled APIs, and quota.` : message,
+      error,
+    );
+  }
+
+  if (!res.ok) {
+    const statusMessage = `YouTube API request failed (HTTP ${res.status})`;
+    if (res.status === 403) {
+      throw new YoutubeApiError(`${statusMessage} Check API key, enabled APIs, and quota.`);
+    }
+    throw new YoutubeApiError(statusMessage);
+  }
+
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    throw new YoutubeApiError(
+      `YouTube API returned an invalid JSON response (HTTP ${res.status})`,
+      new TypeError("Expected YouTube API JSON response to be an object"),
+    );
   }
 
   return data;

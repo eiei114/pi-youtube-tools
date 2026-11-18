@@ -105,9 +105,14 @@ test("happy path validates all feature responses and the offline network boundar
 });
 
 test("error path requires the actual handled API error response", () => {
-  const records = [toolEnd("youtube_search", { details: { error: "Offline smoke quota exceeded" } })];
+  const records = [toolEnd("youtube_search", {
+    details: { error: "YouTube API request failed (HTTP 403) Check API key, enabled APIs, and quota." },
+  })];
   const audit = [{ path: "/youtube/v3/search", outcome: "quota_error" }];
   assert.equal(behaviorAssertions("error_path", observation(records, { audit }))[0].passed, true);
+  assert.equal(behaviorAssertions("error_path", observation([
+    toolEnd("youtube_search", { details: { error: "Offline smoke quota exceeded" } }),
+  ], { audit }))[0].passed, false);
   assert.equal(behaviorAssertions("error_path", observation([], { audit }))[0].passed, false);
   assert.equal(behaviorAssertions("error_path", observation(records, { audit: [] }))[0].passed, false);
   assert.equal(behaviorAssertions("error_path", observation([toolEnd("youtube_search", { details: {} })], { audit }))[0].passed, false);
