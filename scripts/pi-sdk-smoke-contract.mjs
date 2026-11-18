@@ -132,8 +132,7 @@ export function behaviorAssertions(name, observation) {
       "A YouTube API quota error is returned as a handled tool result without an unhandled host error",
       { isError: search?.isError ?? null, error: error ?? null, audit },
       search?.isError === false
-        && typeof error === "string"
-        && error.includes("Offline smoke quota exceeded")
+        && error === "YouTube API request failed (HTTP 403) Check API key, enabled APIs, and quota."
         && quotaObserved,
     )];
   }
