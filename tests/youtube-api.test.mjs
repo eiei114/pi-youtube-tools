@@ -378,6 +378,19 @@ test("getVideoDetails returns null for missing videos", async () => {
   assert.equal(details["missing1234"], null);
 });
 
+test("getVideoDetails returns an empty map without fetching when no IDs are provided", async () => {
+  let fetchCalls = 0;
+  const fetchFn = async () => {
+    fetchCalls += 1;
+    throw new Error("fetchFn should not be called for empty input");
+  };
+
+  const details = await getVideoDetails([], { fetchFn });
+
+  assert.deepEqual(details, {});
+  assert.equal(fetchCalls, 0);
+});
+
 test("getVideoDetails maps statistics", async () => {
   const fetchFn = async () =>
     new Response(
@@ -410,4 +423,43 @@ test("getVideoDetails maps statistics", async () => {
 
   assert.equal(details["abc12345678"]?.viewCount, 1000);
   assert.equal(details["abc12345678"]?.duration, "PT10M");
+});
+
+test("getVideoDetails sends duplicate IDs once and maps one result", async () => {
+  let fetchCalls = 0;
+  let requestedIds = null;
+  const fetchFn = async (url) => {
+    fetchCalls += 1;
+    const requestUrl = new URL(String(url));
+    assert.match(requestUrl.pathname, /youtube\/v3\/videos$/);
+    requestedIds = requestUrl.searchParams.get("id");
+    return new Response(
+      JSON.stringify({
+        items: [
+          {
+            id: "abc12345678",
+            snippet: {
+              title: "Title",
+              channelId: "chan1",
+              channelTitle: "Creator",
+              publishedAt: "2026-01-01T00:00:00Z",
+            },
+            statistics: { viewCount: "1000" },
+            contentDetails: { duration: "PT10M" },
+          },
+        ],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  };
+
+  const details = await getVideoDetails(["abc12345678", "abc12345678"], {
+    apiKey: "test-key",
+    fetchFn,
+  });
+
+  assert.equal(fetchCalls, 1);
+  assert.equal(requestedIds, "abc12345678");
+  assert.deepEqual(Object.keys(details), ["abc12345678"]);
+  assert.equal(details["abc12345678"]?.title, "Title");
 });
