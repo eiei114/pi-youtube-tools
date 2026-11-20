@@ -4,7 +4,7 @@
 
 Run `/youtube:status` in Pi. It reports `source: none` when no key is available, without displaying a key. Add one with `/youtube:login` (enter it in Pi's API-key input prompt; the extension handles it locally and does not send it to the model), or set `YOUTUBE_API_KEY` in the environment that starts Pi. Restart Pi after changing that environment, then check `/youtube:status` again.
 
-`YOUTUBE_API_KEY` takes precedence over the key stored by `/youtube:login`. The status command reports which source is active (`environment`, `stored`, or `none`), not whether that key is accepted by YouTube. `/youtube:logout` removes only the stored key; it does not unset `YOUTUBE_API_KEY`. If the environment variable is still set, it remains the active source after logout. Remove or correct it in Pi's launch environment if you intend to use the stored key instead.
+`YOUTUBE_API_KEY` takes precedence over the key stored by `/youtube:login`. The status command reports which source is active (`environment`, `stored`, or `none`), not whether that key is accepted by YouTube. `/youtube:logout` removes only the stored key; it does not unset `YOUTUBE_API_KEY`. If the environment variable is still set, it remains the active source after logout. To use the stored key instead, explicitly unset `YOUTUBE_API_KEY` in Pi's launch environment and restart Pi; changing it to another non-empty value will still take precedence.
 
 ## YouTube API returns 403
 

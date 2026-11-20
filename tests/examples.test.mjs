@@ -29,6 +29,8 @@ test("troubleshooting guidance matches shipped auth and transcript diagnostics",
   }
   assert.match(troubleshooting, /does not unset `YOUTUBE_API_KEY`/);
   assert.match(troubleshooting, /takes precedence over the key stored/);
+  assert.match(troubleshooting, /explicitly unset `YOUTUBE_API_KEY`.*restart Pi/);
+  assert.match(troubleshooting, /changing it to another non-empty value will still take precedence/);
 });
 
 test("docs/examples.md documents the compare-three-videos walkthrough", () => {
