@@ -74,7 +74,19 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 export function guardOutput(text: string, maxLength = MAX_OUTPUT_CHARS): string {
-  return truncateText(text, maxLength);
+  if (text.length <= maxLength) return text;
+
+  // The output cap includes the marker itself, not just the retained content.
+  let retainedLength = maxLength;
+  while (true) {
+    const omittedLength = text.length - retainedLength;
+    const marker = `\n\n[truncated ${omittedLength} chars]`;
+    const nextRetainedLength = Math.max(0, maxLength - marker.length);
+    if (nextRetainedLength === retainedLength) {
+      return `${text.slice(0, retainedLength)}${marker}`;
+    }
+    retainedLength = nextRetainedLength;
+  }
 }
 
 export function formatDescription(description: string | undefined, include: boolean): string | undefined {
@@ -86,7 +98,7 @@ export function formatDescription(description: string | undefined, include: bool
 
 export function formatSearchResults(query: string, results: SearchVideoResult[]): string {
   if (results.length === 0) {
-    return `YOUTUBE SEARCH\n\nQuery: ${query}\nResults: 0`;
+    return guardOutput(`YOUTUBE SEARCH\n\nQuery: ${query}\nResults: 0`);
   }
 
   const lines = [

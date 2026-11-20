@@ -4,6 +4,15 @@ import test from "node:test";
 const formatters = await import("../lib/formatters.ts");
 const { __testing: transcriptTesting } = await import("../lib/transcript.ts");
 
+function assertCappedOutput(text, fullOutputLength) {
+  const marker = text.match(/\n\n\[truncated (\d+) chars\]$/);
+  assert.ok(marker, "oversized formatter output should end with a truncation marker");
+  assert.ok(text.length <= formatters.MAX_OUTPUT_CHARS);
+
+  const retainedLength = text.length - marker[0].length;
+  assert.equal(Number(marker[1]), fullOutputLength - retainedLength);
+}
+
 test("formatSearchResults renders lean markdown output", () => {
   const text = formatters.formatSearchResults("roblox", [
     {
@@ -19,6 +28,28 @@ test("formatSearchResults renders lean markdown output", () => {
   assert.match(text, /YOUTUBE SEARCH/);
   assert.match(text, /abc12345678/);
   assert.match(text, /Roblox Gameplay/);
+});
+
+test("formatSearchResults caps its complete output and reports omitted characters", () => {
+  const shortQuery = "q";
+  const query = "q".repeat(formatters.MAX_OUTPUT_CHARS + 100);
+  const emptyResultsLength =
+    formatters.formatSearchResults(shortQuery, []).length + query.length - shortQuery.length;
+  const results = [
+    {
+      videoId: "abc12345678",
+      title: "Title",
+      channelId: "chan1",
+      channelTitle: "Creator",
+      publishedAt: "2026-01-01T00:00:00Z",
+      descriptionSnippet: null,
+    },
+  ];
+  const untruncatedLength =
+    formatters.formatSearchResults(shortQuery, results).length + query.length - shortQuery.length;
+
+  assertCappedOutput(formatters.formatSearchResults(query, []), emptyResultsLength);
+  assertCappedOutput(formatters.formatSearchResults(query, results), untruncatedLength);
 });
 
 test("formatIso8601Duration renders human-readable durations", () => {
@@ -49,6 +80,26 @@ test("formatVideoDetailsMap renders formatted durations", () => {
 
   assert.match(text, /duration: 10:30/);
   assert.doesNotMatch(text, /PT10M30S/);
+});
+
+test("formatVideoDetailsMap caps its complete output and reports omitted characters", () => {
+  const shortId = "short";
+  const videoId = "v".repeat(formatters.MAX_OUTPUT_CHARS + 100);
+  const details = {
+    id: shortId,
+    title: "Title",
+    channelId: "chan1",
+    channelTitle: "Creator",
+    publishedAt: "2026-01-01T00:00:00Z",
+    duration: "PT10M30S",
+    viewCount: 1000,
+    likeCount: 50,
+    commentCount: 5,
+  };
+  const untruncatedLength =
+    formatters.formatVideoDetailsMap({ [shortId]: details }).length + videoId.length - shortId.length;
+
+  assertCappedOutput(formatters.formatVideoDetailsMap({ [videoId]: details }), untruncatedLength);
 });
 
 test("truncateText appends truncation marker", () => {
@@ -165,6 +216,16 @@ test("formatTranscriptMap decodes HTML entities in transcript text", () => {
   assert.match(text, /you're not subscribed/);
   assert.match(text, /I'm out\./);
   assert.doesNotMatch(text, /&#39;/);
+});
+
+test("formatTranscriptMap caps its complete output and reports omitted characters", () => {
+  const shortId = "short";
+  const videoId = "t".repeat(formatters.MAX_OUTPUT_CHARS + 100);
+  const transcript = { format: "full_text", text: "Transcript text." };
+  const untruncatedLength =
+    formatters.formatTranscriptMap({ [shortId]: transcript }).length + videoId.length - shortId.length;
+
+  assertCappedOutput(formatters.formatTranscriptMap({ [videoId]: transcript }), untruncatedLength);
 });
 
 test("formatTranscriptMap renders unavailable diagnostics in mixed transcript output", () => {
