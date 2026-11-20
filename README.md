@@ -72,7 +72,9 @@ Check configuration:
 /youtube:status
 ```
 
-`/youtube:status` reports configured or missing only — it never prints the key. `/youtube:logout` clears the stored file; an environment variable still takes precedence on the next run.
+`/youtube:status` reports whether a key is configured and its source — never the key itself. `/youtube:logout` clears the stored file; an environment variable still takes precedence on the next run.
+
+For help with missing keys, API 403/quota errors, or unavailable captions, see the [troubleshooting guide](docs/troubleshooting.md).
 
 ## Typical workflow
 
