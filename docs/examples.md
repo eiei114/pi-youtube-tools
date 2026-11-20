@@ -2,6 +2,8 @@
 
 Workflow patterns for **pi-youtube-tools** inside Pi.
 
+For missing API keys, 403/quota errors, or unavailable captions, see the [troubleshooting guide](troubleshooting.md).
+
 ## Configure auth
 
 ```txt
