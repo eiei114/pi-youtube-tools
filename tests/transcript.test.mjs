@@ -58,6 +58,35 @@ test("key_segments processing skips unused duration metadata", async () => {
   assert.equal(durationReads, 0);
 });
 
+test("getTranscriptWithDiagnostics keeps out-of-order opening captions in input order", async () => {
+  const result = await transcript.getTranscriptWithDiagnostics("abc12345678", {
+    format: "key_segments",
+    fetcher: async () => [
+      segment("first in input", 30),
+      segment("later caption", 70),
+      segment("second in input", 5),
+      segment("at the cutoff", 40),
+      segment("last in input", 39.5),
+    ],
+  });
+
+  assert.equal(result.transcript.hook, "first in input second in input last in input");
+});
+
+test("getTranscriptWithDiagnostics keeps the existing hook for chronological captions", async () => {
+  const result = await transcript.getTranscriptWithDiagnostics("abc12345678", {
+    format: "key_segments",
+    fetcher: async () => [
+      segment("opening caption", 0),
+      segment("just before the cutoff", 39.5),
+      segment("at the cutoff", 40),
+      segment("later caption", 70),
+    ],
+  });
+
+  assert.equal(result.transcript.hook, "opening caption just before the cutoff");
+});
+
 test("getTranscript import remains available for existing callers", () => {
   assert.equal(typeof transcript.getTranscript, "function");
 });

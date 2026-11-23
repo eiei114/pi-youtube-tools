@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Keep opening transcript captions starting before 40 seconds in input order, even when the provider returns captions out of chronological order.
+
 ## [0.1.20] - 2026-11-08
 
 ### Changed
