@@ -83,8 +83,6 @@ function extractHook(segments: readonly TranscriptSegmentView[]): string {
   for (const segment of segments) {
     if (segmentStartSeconds(segment) < HOOK_DURATION_SECONDS) {
       hook += `${segment.text} `;
-    } else {
-      break;
     }
   }
   return hook.trim();
