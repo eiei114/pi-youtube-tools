@@ -55,7 +55,7 @@ const API_ITEMS = [
 ];
 
 /** Load the registered tools with a deterministic offline YouTube API. */
-async function withDetailsTool(fn) {
+async function withDetailsTool(fn, items = API_ITEMS) {
   const realFetch = globalThis.fetch;
   const previousApiKey = process.env.YOUTUBE_API_KEY;
   const requestedUrls = [];
@@ -65,7 +65,7 @@ async function withDetailsTool(fn) {
     requestedUrls.push(url);
     assert.equal(url.hostname, "www.googleapis.com");
     assert.equal(url.pathname, "/youtube/v3/videos");
-    return new Response(JSON.stringify({ items: API_ITEMS }), {
+    return new Response(JSON.stringify({ items }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
@@ -94,10 +94,13 @@ async function withDetailsTool(fn) {
   }
 }
 
-/** Read the rendered field lines of one video block in the tool text. */
+/** Read the body under the exact video heading in the tool text. */
+function textBlock(text, videoId) {
+  return text.split(`\n## ${videoId}\n`)[1]?.split("\n\n")[0];
+}
+
 function textField(text, videoId, field) {
-  const block = text.split(`## ${videoId}\n`)[1]?.split("\n\n")[0] ?? "";
-  return new RegExp(`^${field}: (.*)$`, "m").exec(block)?.[1];
+  return new RegExp(`^${field}: (.*)$`, "m").exec(textBlock(text, videoId) ?? "")?.[1];
 }
 
 test("youtube_video_details renders the same duration in text and details", async () => {
@@ -168,4 +171,23 @@ test("youtube_video_details text and details agree field by field", async () => 
       );
     }
   });
+});
+
+test("youtube_video_details reports an omitted video without losing the returned video", async () => {
+  const [returnedItem] = API_ITEMS;
+  const missingId = "pathcase004";
+  const videoIds = [returnedItem.id, missingId];
+
+  await withDetailsTool(async (detailsTool, requestedUrls) => {
+    const result = await detailsTool.execute("call-partial-batch", { videoIds });
+
+    assert.deepEqual(requestedUrls.map((url) => url.searchParams.get("id")), [videoIds.join(",")]);
+    assert.equal(result.details.count, videoIds.length);
+    assert.equal(result.details.details[returnedItem.id]?.title, returnedItem.snippet.title);
+    assert.equal(result.details.details[missingId], null);
+
+    const text = result.content[0].text;
+    assert.equal(textField(text, returnedItem.id, "title"), returnedItem.snippet.title);
+    assert.equal(textBlock(text, missingId), "not found");
+  }, [returnedItem]);
 });
