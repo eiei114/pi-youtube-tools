@@ -91,17 +91,21 @@ function extractHook(segments: readonly TranscriptSegmentView[]): string {
 function extractOutro(segments: readonly TranscriptSegmentView[]): string {
   if (segments.length === 0) return "";
 
-  const lastStart = segmentStartSeconds(segments[segments.length - 1]!);
-  const outroStart = Math.max(0, lastStart - OUTRO_DURATION_SECONDS);
   // Use the tail scan for chronological captions; preserve custom fetcher order otherwise.
+  let chronological = true;
+  let latestStart = Number.NEGATIVE_INFINITY;
   let previousOffset = Number.NEGATIVE_INFINITY;
-  for (let index = 0; index < segments.length; index += 1) {
-    const offset = segmentStartSeconds(segments[index]!);
-    if (!(offset >= previousOffset)) {
-      const outroSegments = segments.filter((segment) => segmentStartSeconds(segment) >= outroStart);
-      return outroSegments.map((segment) => segment.text).join(" ").trim();
-    }
+  for (const segment of segments) {
+    const offset = segmentStartSeconds(segment);
+    if (!(offset >= previousOffset)) chronological = false;
+    if (offset > latestStart) latestStart = offset;
     previousOffset = offset;
+  }
+
+  const outroStart = Math.max(0, latestStart - OUTRO_DURATION_SECONDS);
+  if (!chronological) {
+    const outroSegments = segments.filter((segment) => segmentStartSeconds(segment) >= outroStart);
+    return outroSegments.map((segment) => segment.text).join(" ").trim();
   }
 
   const outroTexts: string[] = [];
