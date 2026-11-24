@@ -73,7 +73,37 @@ test("getTranscriptWithDiagnostics keeps out-of-order opening captions in input 
   assert.equal(result.transcript.hook, "first in input second in input last in input");
 });
 
-test("getTranscriptWithDiagnostics keeps the existing hook for chronological captions", async () => {
+test("getTranscriptWithDiagnostics anchors an out-of-order outro to the latest caption", async () => {
+  const fetcher = async () => [
+    segment("opening caption", 20),
+    segment("just outside the outro", 69.5),
+    segment("latest caption", 100),
+    segment("at the outro boundary", 70),
+    segment("inside the outro", 85),
+    segment("earlier opening caption", 5),
+  ];
+
+  const keySegments = await transcript.getTranscriptWithDiagnostics("abc12345678", {
+    format: "key_segments",
+    fetcher,
+  });
+  assert.deepEqual(keySegments.transcript, {
+    format: "key_segments",
+    hook: "opening caption earlier opening caption",
+    outro: "latest caption at the outro boundary inside the outro",
+  });
+
+  const fullText = await transcript.getTranscriptWithDiagnostics("abc12345678", {
+    format: "full_text",
+    fetcher,
+  });
+  assert.equal(
+    fullText.transcript.text,
+    "opening caption just outside the outro latest caption at the outro boundary inside the outro earlier opening caption",
+  );
+});
+
+test("getTranscriptWithDiagnostics keeps the existing hook and outro for chronological captions", async () => {
   const result = await transcript.getTranscriptWithDiagnostics("abc12345678", {
     format: "key_segments",
     fetcher: async () => [
@@ -85,6 +115,7 @@ test("getTranscriptWithDiagnostics keeps the existing hook for chronological cap
   });
 
   assert.equal(result.transcript.hook, "opening caption just before the cutoff");
+  assert.equal(result.transcript.outro, "at the cutoff later caption");
 });
 
 test("getTranscript import remains available for existing callers", () => {
